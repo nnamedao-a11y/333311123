@@ -49,6 +49,7 @@ const VinCheckPage = () => {
   const [vehicleType, setVehicleType] = useState('sedan');
   const [calcLoading, setCalcLoading] = useState(false);
   const [quote, setQuote] = useState(null);
+  const [selectedScenario, setSelectedScenario] = useState('recommended');
   
   // Lead form state
   const [showLeadForm, setShowLeadForm] = useState(false);
@@ -137,6 +138,13 @@ const VinCheckPage = () => {
 
     setLeadLoading(true);
     try {
+      // First update scenario if quote exists
+      if (quote?.quote?.id) {
+        await axios.patch(`${API_URL}/api/calculator/quote/${quote.quote.id}/scenario`, {
+          selectedScenario
+        });
+      }
+
       await axios.post(`${API_URL}/api/public/leads/from-quote`, {
         quoteId: quote?.quote?.id || quote?._id,
         firstName: leadForm.firstName,
@@ -399,10 +407,41 @@ const VinCheckPage = () => {
                     </div>
 
                     <div className="mt-6 pt-6 border-t-2 border-zinc-200">
+                      {/* Scenario Pricing */}
+                      {quote?.scenarios && (
+                        <div className="mb-6">
+                          <p className="text-sm text-zinc-500 mb-3">Оберіть сценарій ціни:</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { key: 'minimum', label: 'Мінімум', desc: '-5%' },
+                              { key: 'recommended', label: 'Рекомендовано', desc: 'Базова' },
+                              { key: 'aggressive', label: 'Максимум', desc: '+10%' }
+                            ].map(scenario => (
+                              <button
+                                key={scenario.key}
+                                onClick={() => setSelectedScenario(scenario.key)}
+                                className={`p-3 rounded-lg border-2 transition-all ${
+                                  selectedScenario === scenario.key
+                                    ? 'border-zinc-900 bg-zinc-900 text-white'
+                                    : 'border-zinc-200 hover:border-zinc-400'
+                                }`}
+                                data-testid={`scenario-${scenario.key}`}
+                              >
+                                <div className="text-xs opacity-70">{scenario.label}</div>
+                                <div className="font-bold">
+                                  ${quote.scenarios[scenario.key]?.toLocaleString() || 'N/A'}
+                                </div>
+                                <div className="text-xs opacity-50">{scenario.desc}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex justify-between items-center">
-                        <span className="text-xl font-semibold text-zinc-900">Орієнтовна вартість</span>
+                        <span className="text-xl font-semibold text-zinc-900">Обрана ціна</span>
                         <span className="text-3xl font-bold text-green-600" data-testid="total-price">
-                          ${quote.totals?.visible?.toLocaleString() || '—'}
+                          ${quote?.scenarios?.[selectedScenario]?.toLocaleString() || quote?.totals?.visible?.toLocaleString() || '—'}
                         </span>
                       </div>
                       <p className="text-sm text-zinc-500 mt-2">

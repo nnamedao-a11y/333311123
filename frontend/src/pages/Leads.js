@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../App';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash } from '@phosphor-icons/react';
+import { Plus, Pencil, Trash, Receipt, Eye } from '@phosphor-icons/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { motion } from 'framer-motion';
+import QuoteHistory from '../components/crm/QuoteHistory';
 
 const LEAD_STATUSES = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'archived'];
 const LEAD_SOURCES = ['website', 'referral', 'social_media', 'cold_call', 'advertisement', 'partner', 'other'];
@@ -18,6 +19,8 @@ const Leads = () => {
   const [sourceFilter, setSourceFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [showQuoteHistory, setShowQuoteHistory] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', company: '', source: 'website', description: '', value: 0
   });
@@ -226,6 +229,14 @@ const Leads = () => {
                 <td>
                   <div className="flex items-center justify-end gap-1">
                     <button 
+                      onClick={() => { setSelectedLead(lead); setShowQuoteHistory(true); }}
+                      className="p-2.5 hover:bg-[#DBEAFE] rounded-lg transition-colors" 
+                      data-testid={`quotes-lead-${lead.id}`}
+                      title="Історія розрахунків"
+                    >
+                      <Receipt size={16} className="text-[#2563EB]" />
+                    </button>
+                    <button 
                       onClick={() => openEditModal(lead)} 
                       className="p-2.5 hover:bg-[#F4F4F5] rounded-lg transition-colors" 
                       data-testid={`edit-lead-${lead.id}`}
@@ -308,6 +319,26 @@ const Leads = () => {
               <button type="submit" className="btn-primary flex-1" data-testid="lead-submit-btn">{editingLead ? 'Зберегти' : 'Створити'}</button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quote History Modal */}
+      <Dialog open={showQuoteHistory} onOpenChange={setShowQuoteHistory}>
+        <DialogContent className="max-w-3xl bg-white rounded-2xl border border-[#E4E4E7]" data-testid="quote-history-modal">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#18181B]" style={{ fontFamily: 'Cabinet Grotesk, sans-serif' }}>
+              Історія розрахунків: {selectedLead?.firstName} {selectedLead?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedLead && (
+              <QuoteHistory 
+                leadId={selectedLead.id} 
+                vin={selectedLead.vin}
+                onScenarioChange={() => fetchLeads()}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </motion.div>

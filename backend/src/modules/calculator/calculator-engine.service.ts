@@ -126,6 +126,9 @@ export class CalculatorEngineService {
     
     const quoteNumber = await this.generateQuoteNumber();
 
+    // Build scenario pricing
+    const scenarios = this.buildScenarios(calculation.totals.visible);
+
     const quote = await this.quoteModel.create({
       quoteNumber,
       vin: dto.vin,
@@ -137,24 +140,46 @@ export class CalculatorEngineService {
       internalTotal: calculation.totals.internal,
       hiddenFee: calculation.hiddenBreakdown.hiddenFee,
       profileCode: calculation.profile.code,
+      scenarios,
+      selectedScenario: 'recommended',
+      createdFrom: dto.createdFrom || 'vin',
       leadId: dto.leadId,
       customerId: dto.customerId,
       createdBy: userId,
       status: 'draft',
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       notes: dto.notes,
+      history: [{
+        action: 'created',
+        timestamp: new Date(),
+        userId: userId,
+      }],
     });
 
     this.logger.log(`[Quote] Created ${quoteNumber} for VIN: ${dto.vin || 'N/A'}`);
 
     return {
       ...calculation,
+      scenarios,
       quote: {
         id: quote._id,
         quoteNumber: quote.quoteNumber,
         status: quote.status,
         expiresAt: quote.expiresAt,
+        scenarios,
+        selectedScenario: 'recommended',
       },
+    };
+  }
+
+  /**
+   * Build scenario pricing
+   */
+  private buildScenarios(visibleTotal: number) {
+    return {
+      minimum: round2(visibleTotal * 0.95),      // -5%
+      recommended: round2(visibleTotal),          // base
+      aggressive: round2(visibleTotal * 1.10),    // +10%
     };
   }
 
@@ -254,6 +279,76 @@ export class CalculatorEngineService {
    */
   async getRecentQuotes(limit = 20) {
     return this.quoteModel.find().sort({ createdAt: -1 }).limit(limit).lean();
+  }
+
+  /**
+   * Get quotes with filters
+   */
+  async getQuotes(query: { vin?: string; leadId?: string; customerPhone?: string; limit?: number }) {
+    const filter: Record<string, any> = {};
+    
+    if (query.vin) filter.vin = query.vin.toUpperCase().trim();
+    if (query.leadId) filter.leadId = query.leadId;
+    if (query.customerPhone) filter.customerPhone = query.customerPhone;
+
+    return this.quoteModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(query.limit || 50)
+      .lean();
+  }
+
+  /**
+   * Set quote scenario
+   */
+  async setQuoteScenario(id: string, selectedScenario: 'minimum' | 'recommended' | 'aggressive') {
+    const quote = await this.quoteModel.findById(id);
+    if (!quote) throw new NotFoundException('Quote not found');
+
+    const selectedPrice = quote.scenarios?.[selectedScenario] || quote.visibleTotal;
+
+    return this.quoteModel.findByIdAndUpdate(
+      id,
+      {
+        $set: { 
+          selectedScenario,
+          finalPrice: selectedPrice,
+        },
+        $push: {
+          history: {
+            action: 'scenario_changed',
+            timestamp: new Date(),
+            oldValue: quote.selectedScenario,
+            newValue: selectedScenario,
+          }
+        }
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Bind quote to lead
+   */
+  async bindQuoteToLead(id: string, payload: { leadId: string; managerId?: string }) {
+    return this.quoteModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          leadId: payload.leadId,
+          managerId: payload.managerId,
+          convertedToLead: true,
+        },
+        $push: {
+          history: {
+            action: 'bound_to_lead',
+            timestamp: new Date(),
+            newValue: payload.leadId,
+          }
+        }
+      },
+      { new: true }
+    );
   }
 }
 

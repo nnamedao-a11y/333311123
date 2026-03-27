@@ -523,6 +523,195 @@ class BIBICRMTester:
                 return False
         return False
 
+    def test_quote_scenario_change(self):
+        """Test PATCH /api/calculator/quote/:id/scenario - Quote History System"""
+        self.log("\n=== TESTING QUOTE SCENARIO CHANGE ===")
+        
+        if not self.quote_id:
+            self.log("❌ No quote ID available for scenario change test")
+            return False
+        
+        # Test changing scenario to minimum
+        success, response = self.run_test(
+            "Change Quote Scenario to Minimum",
+            "PATCH",
+            f"calculator/quote/{self.quote_id}/scenario",
+            200,
+            data={"selectedScenario": "minimum"}
+        )
+        
+        if success:
+            if 'selectedScenario' in response and response['selectedScenario'] == 'minimum':
+                self.log("✅ Quote scenario changed to minimum successfully")
+                if 'finalPrice' in response:
+                    self.log(f"   Final price updated to: ${response['finalPrice']}")
+            else:
+                self.log("❌ Scenario change response missing expected fields")
+                return False
+        else:
+            return False
+        
+        # Test changing scenario to aggressive
+        success, response = self.run_test(
+            "Change Quote Scenario to Aggressive",
+            "PATCH",
+            f"calculator/quote/{self.quote_id}/scenario",
+            200,
+            data={"selectedScenario": "aggressive"}
+        )
+        
+        if success:
+            if 'selectedScenario' in response and response['selectedScenario'] == 'aggressive':
+                self.log("✅ Quote scenario changed to aggressive successfully")
+                if 'finalPrice' in response:
+                    self.log(f"   Final price updated to: ${response['finalPrice']}")
+                return True
+            else:
+                self.log("❌ Scenario change response missing expected fields")
+                return False
+        return False
+
+    def test_quotes_by_lead(self):
+        """Test GET /api/calculator/quotes?leadId= - Quote History System"""
+        self.log("\n=== TESTING QUOTES BY LEAD ===")
+        
+        if not self.token:
+            self.log("❌ No token available for quotes by lead test")
+            return False
+        
+        # First get a lead ID from leads API
+        success, leads_response = self.run_test(
+            "Get Leads for Quote History Test",
+            "GET",
+            "leads",
+            200
+        )
+        
+        if not success or not leads_response.get('data'):
+            self.log("❌ No leads available for quote history test")
+            return False
+        
+        leads = leads_response['data']
+        if not leads:
+            self.log("❌ No leads found for quote history test")
+            return False
+        
+        lead_id = leads[0].get('id')
+        if not lead_id:
+            self.log("❌ No lead ID found for quote history test")
+            return False
+        
+        # Test getting quotes by lead ID
+        success, response = self.run_test(
+            "Get Quotes by Lead ID",
+            "GET",
+            f"calculator/quotes?leadId={lead_id}",
+            200
+        )
+        
+        if success:
+            quotes = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(quotes)} quotes for lead {lead_id}")
+            
+            # Check quote structure for Quote History System features
+            for quote in quotes[:2]:  # Check first 2 quotes
+                if 'scenarios' in quote:
+                    scenarios = quote['scenarios']
+                    if 'minimum' in scenarios and 'recommended' in scenarios and 'aggressive' in scenarios:
+                        self.log(f"✅ Quote {quote.get('_id', 'N/A')} has all scenario pricing: min=${scenarios['minimum']}, rec=${scenarios['recommended']}, agg=${scenarios['aggressive']}")
+                    else:
+                        self.log(f"❌ Quote {quote.get('_id', 'N/A')} missing scenario pricing")
+                
+                if 'selectedScenario' in quote:
+                    self.log(f"✅ Quote {quote.get('_id', 'N/A')} has selected scenario: {quote['selectedScenario']}")
+                else:
+                    self.log(f"❌ Quote {quote.get('_id', 'N/A')} missing selectedScenario")
+                
+                if 'history' in quote and isinstance(quote['history'], list):
+                    self.log(f"✅ Quote {quote.get('_id', 'N/A')} has audit history with {len(quote['history'])} entries")
+                else:
+                    self.log(f"❌ Quote {quote.get('_id', 'N/A')} missing audit history")
+            
+            return True
+        return False
+
+    def test_quotes_by_vin(self):
+        """Test GET /api/calculator/quotes?vin= - Quote History System"""
+        self.log("\n=== TESTING QUOTES BY VIN ===")
+        
+        if not self.token:
+            self.log("❌ No token available for quotes by VIN test")
+            return False
+        
+        test_vin = "1HGBH41JXMN109186"
+        
+        # Test getting quotes by VIN
+        success, response = self.run_test(
+            "Get Quotes by VIN",
+            "GET",
+            f"calculator/quotes?vin={test_vin}",
+            200
+        )
+        
+        if success:
+            quotes = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(quotes)} quotes for VIN {test_vin}")
+            
+            # Check quote structure for Quote History System features
+            for quote in quotes[:2]:  # Check first 2 quotes
+                if 'quoteNumber' in quote:
+                    self.log(f"✅ Quote {quote['quoteNumber']} found for VIN")
+                
+                if 'scenarios' in quote and 'selectedScenario' in quote:
+                    selected_price = quote['scenarios'].get(quote['selectedScenario'], 'N/A')
+                    self.log(f"✅ Quote {quote.get('quoteNumber', 'N/A')} scenario: {quote['selectedScenario']} = ${selected_price}")
+            
+            return True
+        return False
+
+    def test_quote_audit_history(self):
+        """Test quote audit history functionality"""
+        self.log("\n=== TESTING QUOTE AUDIT HISTORY ===")
+        
+        if not self.quote_id:
+            self.log("❌ No quote ID available for audit history test")
+            return False
+        
+        # Get the quote to check its history
+        success, response = self.run_test(
+            "Get Quote for History Check",
+            "GET",
+            f"calculator/quote/{self.quote_id}",
+            200
+        )
+        
+        if success:
+            if 'history' in response and isinstance(response['history'], list):
+                history = response['history']
+                self.log(f"✅ Quote has audit history with {len(history)} entries")
+                
+                # Check history entries structure
+                for entry in history:
+                    if 'action' in entry and 'timestamp' in entry:
+                        self.log(f"   History entry: {entry['action']} at {entry['timestamp']}")
+                    else:
+                        self.log(f"❌ Invalid history entry structure: {entry}")
+                        return False
+                
+                # Check if scenario changes are tracked
+                scenario_changes = [h for h in history if h.get('action') == 'scenario_changed']
+                if scenario_changes:
+                    self.log(f"✅ Found {len(scenario_changes)} scenario change entries in audit history")
+                    for change in scenario_changes:
+                        if 'oldValue' in change and 'newValue' in change:
+                            self.log(f"   Scenario changed from {change['oldValue']} to {change['newValue']}")
+                
+                return True
+            else:
+                self.log("❌ Quote missing audit history")
+                return False
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("🚀 Starting BIBI Cars CRM Backend API Tests")
@@ -534,6 +723,10 @@ class BIBICRMTester:
             ("Calculator Ports", self.test_calculator_ports),
             ("Calculator Calculate", self.test_calculator_calculate),
             ("Calculator Quote", self.test_calculator_quote),
+            ("Quote Scenario Change", self.test_quote_scenario_change),
+            ("Quotes by Lead", self.test_quotes_by_lead),
+            ("Quotes by VIN", self.test_quotes_by_vin),
+            ("Quote Audit History", self.test_quote_audit_history),
             ("Lead Quick Create", self.test_lead_quick_create),
             ("Lead from Quote", self.test_lead_from_quote),
             ("Leads API", self.test_leads_api),

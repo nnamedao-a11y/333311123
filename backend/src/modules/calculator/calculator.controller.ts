@@ -57,6 +57,41 @@ export class CalculatorController {
   }
 
   /**
+   * Get quotes with filters (history)
+   */
+  @Get('quotes')
+  getQuotes(
+    @Query('vin') vin?: string,
+    @Query('leadId') leadId?: string,
+    @Query('customerPhone') customerPhone?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.engine.getQuotes({ vin, leadId, customerPhone, limit: limit ? parseInt(limit) : 50 });
+  }
+
+  /**
+   * Set quote scenario
+   */
+  @Patch('quote/:id/scenario')
+  setScenario(
+    @Param('id') id: string,
+    @Body() body: { selectedScenario: 'minimum' | 'recommended' | 'aggressive' },
+  ) {
+    return this.engine.setQuoteScenario(id, body.selectedScenario);
+  }
+
+  /**
+   * Bind quote to lead
+   */
+  @Patch('quote/:id/bind-lead')
+  bindQuoteToLead(
+    @Param('id') id: string,
+    @Body() body: { leadId: string; managerId?: string },
+  ) {
+    return this.engine.bindQuoteToLead(id, body);
+  }
+
+  /**
    * Get available ports (for UI dropdown)
    */
   @Get('ports')
@@ -171,7 +206,7 @@ export class CalculatorController {
    * Get all quotes (admin)
    */
   @Get('admin/quotes')
-  getQuotes(
+  getAdminQuotes(
     @Query('status') status?: string,
     @Query('limit') limit?: string,
   ) {

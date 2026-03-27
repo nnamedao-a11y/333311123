@@ -44,6 +44,45 @@ export class CreateQuoteDto extends CalculateDeliveryDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsEnum(['vin', 'manual', 'admin', 'manager'])
+  createdFrom?: 'vin' | 'manual' | 'admin' | 'manager';
+
+  @IsOptional()
+  @IsString()
+  customerName?: string;
+
+  @IsOptional()
+  @IsString()
+  customerPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  customerEmail?: string;
+}
+
+export class QueryQuotesDto {
+  @IsOptional()
+  @IsString()
+  vin?: string;
+
+  @IsOptional()
+  @IsString()
+  leadId?: string;
+
+  @IsOptional()
+  @IsString()
+  customerPhone?: string;
+
+  @IsOptional()
+  @IsNumber()
+  limit?: number;
+}
+
+export class SetScenarioDto {
+  @IsEnum(['minimum', 'recommended', 'aggressive'])
+  selectedScenario: 'minimum' | 'recommended' | 'aggressive';
 }
 
 export class UpdateProfileDto {
