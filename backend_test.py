@@ -712,6 +712,231 @@ class BIBICRMTester:
                 return False
         return False
 
+    def test_manager_price_override(self):
+        """Test PATCH /api/calculator/quote/:id/override - Manager Price Override"""
+        self.log("\n=== TESTING MANAGER PRICE OVERRIDE ===")
+        
+        if not self.quote_id:
+            self.log("❌ No quote ID available for manager price override test")
+            return False
+        
+        # First get the current quote to see original price
+        success, quote_response = self.run_test(
+            "Get Quote for Override Test",
+            "GET",
+            f"calculator/quote/{self.quote_id}",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        original_price = quote_response.get('finalPrice') or quote_response.get('visibleTotal', 15000)
+        new_price = original_price + 1000  # Override with +$1000
+        
+        # Test manager price override
+        override_data = {
+            "newPrice": new_price,
+            "reason": "client_negotiation",
+            "managerId": "test_manager_001",
+            "managerName": "Test Manager"
+        }
+        
+        success, response = self.run_test(
+            "Manager Price Override",
+            "PATCH",
+            f"calculator/quote/{self.quote_id}/override",
+            200,
+            data=override_data
+        )
+        
+        if success:
+            if 'quote' in response and 'override' in response:
+                override_info = response['override']
+                self.log(f"✅ Price override successful: ${override_info.get('oldPrice')} → ${override_info.get('newPrice')}")
+                self.log(f"   Reason: {override_info.get('reason')}")
+                self.log(f"   Manager: {override_info.get('managerName')}")
+                self.log(f"   Price diff: ${override_info.get('priceDiff')}")
+                self.log(f"   Percent change: {override_info.get('percentChange')}%")
+                self.log(f"   Margin change: ${override_info.get('marginChange')}")
+                return True
+            else:
+                self.log("❌ Override response missing expected fields")
+                return False
+        return False
+
+    def test_quote_audit_api(self):
+        """Test GET /api/calculator/quote/:id/audit - Quote Audit History API"""
+        self.log("\n=== TESTING QUOTE AUDIT API ===")
+        
+        if not self.quote_id:
+            self.log("❌ No quote ID available for audit API test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Audit History",
+            "GET",
+            f"calculator/quote/{self.quote_id}/audit",
+            200
+        )
+        
+        if success:
+            if 'quoteNumber' in response and 'history' in response:
+                self.log(f"✅ Audit API working - Quote: {response['quoteNumber']}")
+                self.log(f"   Current price: ${response.get('currentPrice')}")
+                self.log(f"   Selected scenario: {response.get('selectedScenario')}")
+                
+                history = response['history']
+                self.log(f"   History entries: {len(history)}")
+                
+                # Check for manager override entries
+                override_entries = [h for h in history if h.get('action') == 'manager_price_override']
+                if override_entries:
+                    self.log(f"✅ Found {len(override_entries)} manager override entries")
+                    for entry in override_entries:
+                        if 'newValue' in entry:
+                            new_val = entry['newValue']
+                            self.log(f"   Override: ${new_val.get('price')} (reason: {new_val.get('reason')})")
+                
+                # Check summary
+                if 'summary' in response:
+                    summary = response['summary']
+                    self.log(f"   Summary - Total changes: {summary.get('totalChanges')}, Price overrides: {summary.get('priceOverrides')}")
+                
+                return True
+            else:
+                self.log("❌ Audit API response missing expected fields")
+                return False
+        return False
+
+    def test_manager_analytics(self):
+        """Test GET /api/calculator/admin/manager-analytics - Manager Override Analytics"""
+        self.log("\n=== TESTING MANAGER ANALYTICS ===")
+        
+        if not self.token:
+            self.log("❌ No token available for manager analytics test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Manager Override Analytics",
+            "GET",
+            "calculator/admin/manager-analytics",
+            200
+        )
+        
+        if success:
+            if 'period' in response and 'byManager' in response:
+                self.log(f"✅ Manager analytics working - Period: {response['period']}")
+                self.log(f"   Total overrides in period: {response.get('totalOverridesInPeriod', 0)}")
+                self.log(f"   Total margin impact: ${response.get('totalMarginImpact', 0)}")
+                
+                managers = response['byManager']
+                self.log(f"   Managers with overrides: {len(managers)}")
+                
+                for manager in managers[:3]:  # Show first 3 managers
+                    self.log(f"   Manager {manager.get('managerName', 'Unknown')}: {manager.get('totalOverrides')} overrides, avg change: {manager.get('avgPercentChange')}%")
+                
+                return True
+            else:
+                self.log("❌ Manager analytics response missing expected fields")
+                return False
+        return False
+
+    def test_revert_to_scenario(self):
+        """Test PATCH /api/calculator/quote/:id/revert - Revert to Scenario"""
+        self.log("\n=== TESTING REVERT TO SCENARIO ===")
+        
+        if not self.quote_id:
+            self.log("❌ No quote ID available for revert test")
+            return False
+        
+        revert_data = {
+            "scenario": "recommended",
+            "managerId": "test_manager_001"
+        }
+        
+        success, response = self.run_test(
+            "Revert to Scenario Price",
+            "PATCH",
+            f"calculator/quote/{self.quote_id}/revert",
+            200,
+            data=revert_data
+        )
+        
+        if success:
+            if 'finalPrice' in response and 'selectedScenario' in response:
+                self.log(f"✅ Revert successful - Final price: ${response['finalPrice']}")
+                self.log(f"   Selected scenario: {response['selectedScenario']}")
+                return True
+            else:
+                self.log("❌ Revert response missing expected fields")
+                return False
+        return False
+
+    def test_vin_intelligence_flow(self):
+        """Test full VIN Intelligence flow with test VINs"""
+        self.log("\n=== TESTING VIN INTELLIGENCE FLOW ===")
+        
+        test_vins = [
+            {"vin": "WBA3B3C50EF123456", "expected_price": 8500, "make": "BMW"},
+            {"vin": "1HGCV1F34KA000001", "expected_price": 12500, "make": "Honda"}
+        ]
+        
+        for test_vin in test_vins:
+            self.log(f"\n--- Testing VIN: {test_vin['vin']} ({test_vin['make']}) ---")
+            
+            # Create quote with test VIN
+            quote_data = {
+                "price": test_vin['expected_price'],
+                "port": "NJ",
+                "vehicleType": "sedan",
+                "vin": test_vin['vin'],
+                "vehicleTitle": f"{test_vin['make']} Test Vehicle"
+            }
+            
+            success, response = self.run_test(
+                f"Create Quote for {test_vin['make']} VIN",
+                "POST",
+                "calculator/quote",
+                201,
+                data=quote_data
+            )
+            
+            if success:
+                if 'quote' in response and 'id' in response['quote']:
+                    vin_quote_id = response['quote']['id']
+                    self.log(f"✅ Quote created for {test_vin['make']} VIN: {vin_quote_id}")
+                    
+                    # Test manager override on this quote
+                    override_data = {
+                        "newPrice": test_vin['expected_price'] + 500,
+                        "reason": "competitive_pricing",
+                        "managerId": "test_manager_002",
+                        "managerName": "VIN Test Manager"
+                    }
+                    
+                    success, override_response = self.run_test(
+                        f"Override Price for {test_vin['make']} VIN",
+                        "PATCH",
+                        f"calculator/quote/{vin_quote_id}/override",
+                        200,
+                        data=override_data
+                    )
+                    
+                    if success:
+                        self.log(f"✅ Price override successful for {test_vin['make']} VIN")
+                    else:
+                        self.log(f"❌ Price override failed for {test_vin['make']} VIN")
+                        return False
+                else:
+                    self.log(f"❌ Quote creation failed for {test_vin['make']} VIN")
+                    return False
+            else:
+                self.log(f"❌ Quote creation failed for {test_vin['make']} VIN")
+                return False
+        
+        return True
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("🚀 Starting BIBI Cars CRM Backend API Tests")
@@ -724,6 +949,11 @@ class BIBICRMTester:
             ("Calculator Calculate", self.test_calculator_calculate),
             ("Calculator Quote", self.test_calculator_quote),
             ("Quote Scenario Change", self.test_quote_scenario_change),
+            ("Manager Price Override", self.test_manager_price_override),
+            ("Quote Audit API", self.test_quote_audit_api),
+            ("Manager Analytics", self.test_manager_analytics),
+            ("Revert to Scenario", self.test_revert_to_scenario),
+            ("VIN Intelligence Flow", self.test_vin_intelligence_flow),
             ("Quotes by Lead", self.test_quotes_by_lead),
             ("Quotes by VIN", self.test_quotes_by_vin),
             ("Quote Audit History", self.test_quote_audit_history),

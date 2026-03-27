@@ -234,4 +234,58 @@ export class CalculatorController {
   getStats() {
     return this.admin.getCalculatorStats();
   }
+
+  // ============ MANAGER PRICE OVERRIDE ============
+
+  /**
+   * Manager price override with full audit
+   */
+  @Patch('quote/:id/override')
+  managerPriceOverride(
+    @Param('id') id: string,
+    @Body() body: { 
+      newPrice: number; 
+      reason: string; 
+      managerId: string;
+      managerName?: string;
+    },
+  ) {
+    return this.engine.managerPriceOverride(id, body);
+  }
+
+  /**
+   * Get quote audit history
+   */
+  @Get('quote/:id/audit')
+  getQuoteAuditHistory(@Param('id') id: string) {
+    return this.engine.getQuoteAuditHistory(id);
+  }
+
+  /**
+   * Get manager override analytics
+   */
+  @Get('admin/manager-analytics')
+  getManagerOverrideAnalytics(
+    @Query('managerId') managerId?: string,
+    @Query('days') days?: string,
+  ) {
+    return this.engine.getManagerOverrideAnalytics(
+      managerId, 
+      days ? parseInt(days) : 30
+    );
+  }
+
+  /**
+   * Revert quote to scenario price
+   */
+  @Patch('quote/:id/revert')
+  revertToScenarioPrice(
+    @Param('id') id: string,
+    @Body() body: { 
+      scenario: 'minimum' | 'recommended' | 'aggressive';
+      managerId: string;
+    },
+  ) {
+    return this.engine.revertToScenarioPrice(id, body.scenario, body.managerId);
+  }
 }

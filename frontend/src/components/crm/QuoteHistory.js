@@ -3,6 +3,7 @@
  * 
  * Відображає історію всіх розрахунків для ліда/VIN
  * + Scenario Pricing Selection
+ * + Manager Price Override
  */
 
 import React, { useState, useEffect } from 'react';
@@ -16,14 +17,17 @@ import {
   Clock,
   CurrencyDollar,
   CheckCircle,
-  Warning
+  Warning,
+  PencilSimple
 } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ManagerPriceOverride from './ManagerPriceOverride';
 
-const QuoteHistory = ({ leadId, vin, onScenarioChange }) => {
+const QuoteHistory = ({ leadId, vin, onScenarioChange, showManagerOverride = true }) => {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedQuote, setExpandedQuote] = useState(null);
+  const [activeOverrideQuote, setActiveOverrideQuote] = useState(null);
 
   useEffect(() => {
     loadQuotes();
@@ -75,7 +79,17 @@ const QuoteHistory = ({ leadId, vin, onScenarioChange }) => {
   const scenarioColors = {
     minimum: 'text-[#059669] bg-[#DCFCE7]',
     recommended: 'text-[#2563EB] bg-[#DBEAFE]',
-    aggressive: 'text-[#DC2626] bg-[#FEE2E2]'
+    aggressive: 'text-[#DC2626] bg-[#FEE2E2]',
+    custom: 'text-[#7C3AED] bg-[#F3E8FF]'
+  };
+
+  const handleQuoteUpdate = (updatedQuote) => {
+    setQuotes(prev => prev.map(q => 
+      q._id === updatedQuote._id ? updatedQuote : q
+    ));
+    if (onScenarioChange) {
+      onScenarioChange(updatedQuote);
+    }
   };
 
   if (loading) {
@@ -233,6 +247,30 @@ const QuoteHistory = ({ leadId, vin, onScenarioChange }) => {
                           </div>
                         )}
                       </div>
+
+                      {/* Manager Price Override Section */}
+                      {showManagerOverride && (
+                        <div className="border-t border-[#E4E4E7] pt-4 mt-4">
+                          <button
+                            onClick={() => setActiveOverrideQuote(activeOverrideQuote === quote._id ? null : quote._id)}
+                            className="flex items-center gap-2 text-sm text-[#7C3AED] hover:underline"
+                            data-testid={`manager-override-toggle-${quote._id}`}
+                          >
+                            <PencilSimple size={16} />
+                            {activeOverrideQuote === quote._id ? 'Приховати' : 'Manager Price Override'}
+                          </button>
+                          
+                          {activeOverrideQuote === quote._id && (
+                            <div className="mt-4">
+                              <ManagerPriceOverride
+                                quoteId={quote._id}
+                                quote={quote}
+                                onUpdate={handleQuoteUpdate}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}

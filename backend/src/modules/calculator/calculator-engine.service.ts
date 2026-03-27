@@ -350,6 +350,217 @@ export class CalculatorEngineService {
       { new: true }
     );
   }
+
+  // ============ MANAGER PRICE OVERRIDE SYSTEM ============
+
+  /**
+   * Manager can override the final price with audit
+   * 
+   * Business rules:
+   * - Manager can set any custom price
+   * - Must provide reason for override
+   * - Full audit trail recorded
+   * - Margin impact calculated and logged
+   */
+  async managerPriceOverride(
+    quoteId: string, 
+    payload: { 
+      newPrice: number; 
+      reason: string; 
+      managerId: string;
+      managerName?: string;
+    }
+  ) {
+    const quote = await this.quoteModel.findById(quoteId);
+    if (!quote) throw new NotFoundException('Quote not found');
+
+    const oldPrice = quote.finalPrice || quote.scenarios?.[quote.selectedScenario || 'recommended'] || quote.visibleTotal;
+    const priceDiff = payload.newPrice - oldPrice;
+    const percentChange = round2((priceDiff / oldPrice) * 100);
+
+    // Calculate margin impact
+    const originalMargin = quote.internalTotal - quote.visibleTotal;
+    const newMargin = payload.newPrice - quote.internalTotal + originalMargin;
+    const marginChange = newMargin - originalMargin;
+
+    const auditEntry = {
+      action: 'manager_price_override',
+      timestamp: new Date(),
+      userId: payload.managerId,
+      userName: payload.managerName,
+      oldValue: {
+        price: oldPrice,
+        margin: originalMargin,
+        scenario: quote.selectedScenario,
+      },
+      newValue: {
+        price: payload.newPrice,
+        margin: newMargin,
+        reason: payload.reason,
+        priceDiff,
+        percentChange,
+        marginChange,
+      },
+    };
+
+    this.logger.log(`[Manager Override] Quote ${quote.quoteNumber}: $${oldPrice} → $${payload.newPrice} (${percentChange > 0 ? '+' : ''}${percentChange}%) by ${payload.managerName || payload.managerId}`);
+
+    const updated = await this.quoteModel.findByIdAndUpdate(
+      quoteId,
+      {
+        $set: {
+          finalPrice: payload.newPrice,
+          selectedScenario: 'custom', // Mark as custom override
+          notes: `${quote.notes || ''}\n[Override: ${payload.reason}]`.trim(),
+        },
+        $push: { history: auditEntry },
+      },
+      { new: true }
+    );
+
+    return {
+      quote: updated,
+      override: {
+        oldPrice,
+        newPrice: payload.newPrice,
+        priceDiff,
+        percentChange,
+        marginChange,
+        reason: payload.reason,
+        managerId: payload.managerId,
+        managerName: payload.managerName,
+        timestamp: auditEntry.timestamp,
+      },
+    };
+  }
+
+  /**
+   * Get quote audit history
+   */
+  async getQuoteAuditHistory(quoteId: string) {
+    const quote = await this.quoteModel.findById(quoteId).lean();
+    if (!quote) throw new NotFoundException('Quote not found');
+
+    return {
+      quoteNumber: quote.quoteNumber,
+      vin: quote.vin,
+      currentPrice: quote.finalPrice || quote.visibleTotal,
+      selectedScenario: quote.selectedScenario,
+      history: quote.history || [],
+      createdAt: (quote as any).createdAt,
+      summary: {
+        totalChanges: (quote.history || []).length,
+        priceOverrides: (quote.history || []).filter((h: any) => h.action === 'manager_price_override').length,
+        scenarioChanges: (quote.history || []).filter((h: any) => h.action === 'scenario_changed').length,
+      },
+    };
+  }
+
+  /**
+   * Get manager override analytics
+   * Shows who changed prices and impact on margins
+   */
+  async getManagerOverrideAnalytics(managerId?: string, days = 30) {
+    const dateFilter = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const pipeline: any[] = [
+      {
+        $match: {
+          'history.action': 'manager_price_override',
+          createdAt: { $gte: dateFilter },
+        }
+      },
+      {
+        $unwind: '$history'
+      },
+      {
+        $match: {
+          'history.action': 'manager_price_override',
+          ...(managerId && { 'history.userId': managerId }),
+        }
+      },
+      {
+        $group: {
+          _id: '$history.userId',
+          managerName: { $first: '$history.userName' },
+          totalOverrides: { $sum: 1 },
+          avgPriceChange: { $avg: '$history.newValue.priceDiff' },
+          avgPercentChange: { $avg: '$history.newValue.percentChange' },
+          totalMarginImpact: { $sum: '$history.newValue.marginChange' },
+          overrides: {
+            $push: {
+              quoteNumber: '$quoteNumber',
+              vin: '$vin',
+              oldPrice: '$history.oldValue.price',
+              newPrice: '$history.newValue.price',
+              reason: '$history.newValue.reason',
+              timestamp: '$history.timestamp',
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          managerId: '$_id',
+          managerName: 1,
+          totalOverrides: 1,
+          avgPriceChange: { $round: ['$avgPriceChange', 2] },
+          avgPercentChange: { $round: ['$avgPercentChange', 2] },
+          totalMarginImpact: { $round: ['$totalMarginImpact', 2] },
+          recentOverrides: { $slice: ['$overrides', -10] },
+        }
+      },
+      {
+        $sort: { totalOverrides: -1 }
+      }
+    ];
+
+    const result = await this.quoteModel.aggregate(pipeline);
+
+    return {
+      period: `Last ${days} days`,
+      totalOverridesInPeriod: result.reduce((acc, r) => acc + r.totalOverrides, 0),
+      totalMarginImpact: round2(result.reduce((acc, r) => acc + r.totalMarginImpact, 0)),
+      byManager: result,
+    };
+  }
+
+  /**
+   * Revert to original scenario price
+   */
+  async revertToScenarioPrice(
+    quoteId: string, 
+    scenario: 'minimum' | 'recommended' | 'aggressive',
+    managerId: string
+  ) {
+    const quote = await this.quoteModel.findById(quoteId);
+    if (!quote) throw new NotFoundException('Quote not found');
+
+    const scenarioPrice = quote.scenarios?.[scenario];
+    if (!scenarioPrice) throw new NotFoundException('Scenario price not found');
+
+    const oldPrice = quote.finalPrice || quote.visibleTotal;
+
+    return this.quoteModel.findByIdAndUpdate(
+      quoteId,
+      {
+        $set: {
+          finalPrice: scenarioPrice,
+          selectedScenario: scenario,
+        },
+        $push: {
+          history: {
+            action: 'revert_to_scenario',
+            timestamp: new Date(),
+            userId: managerId,
+            oldValue: { price: oldPrice },
+            newValue: { price: scenarioPrice, scenario },
+          }
+        }
+      },
+      { new: true }
+    );
+  }
 }
 
 // Helpers
