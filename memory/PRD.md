@@ -1,7 +1,7 @@
 # BIBI Cars CRM - VIN Intelligence Platform
 
 ## Project Summary
-Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine, Quote Management, Manager Price Override system, and **Quote Analytics Dashboard**.
+Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine, Quote Management, Manager Price Override, Quote Analytics Dashboard, and **Full Deals Pipeline**.
 
 ## Architecture
 - **Backend**: NestJS (TypeScript) + FastAPI proxy
@@ -17,125 +17,104 @@ Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine
 - Price and history tracking
 
 ### Calculator Engine ✅
-- Dynamic pricing based on:
-  - Car price
-  - Port of origin
-  - Vehicle type
-  - Destination country
+- Dynamic pricing based on car price, port, vehicle type, destination
 - Configurable fees: auction, insurance, customs, shipping, company fee
 - Hidden fee (margin control) system
 
 ### Scenario Pricing System ✅
-- Three pricing scenarios:
-  - Minimum: -5% from visible total
-  - Recommended: base visible price
-  - Aggressive: +10% from visible total
+- Three pricing scenarios: Minimum (-5%), Recommended, Aggressive (+10%)
 - Quote creation with scenario selection
 
 ### Manager Price Override + Audit ✅
 - Manager can override final price with reason
 - Full audit trail recorded
 - Impact on margin calculated
-- Analytics by manager:
-  - Total overrides
-  - Average price change %
-  - Margin impact
 
 ### Quote History System ✅
 - All calculations saved as quotes
 - Linked to leads and customers
 - Scenario selection per quote
-- Audit history per quote
 
-### Quote Analytics Dashboard ✅ (NEW - 2026-03-27)
-Business intelligence dashboard for quote/revenue analysis:
+### Quote Analytics Dashboard ✅ (2026-03-27)
+- KPI metrics: Total Quotes, Conversion %, Margin, Revenue, Hidden Fee, Lost Revenue
+- Scenario Performance with conversion rates
+- Manager Performance table with override tracking
+- Source Performance analytics
+- Timeline charts (30-day trend)
+- Lost Revenue Analysis
 
-**KPI Metrics:**
-- Total Quotes
-- Quote → Lead Conversion Rate
-- Estimated Margin (Hidden Fee total)
-- Visible Revenue
-- Total Hidden Fee
-- Lost Revenue (from overrides)
+### Deals System v2.0 ✅ (2026-03-27) **NEW**
+Full sales pipeline: **QUOTE → LEAD → DEAL → DEPOSIT → PROFIT**
 
-**Scenario Performance:**
-- Conversion rate per scenario (minimum/recommended/aggressive)
-- Average price and margin per scenario
-- Visual progress bars
+**Status Pipeline:**
+- `new` → `negotiation` → `waiting_deposit` → `deposit_paid` → `purchased` → `in_delivery` → `completed`
+- Status transition validation
+- `cancelled` option at any stage
 
-**Manager Performance:**
-- Quotes count per manager
-- Conversion rate
-- Average margin
-- Total margin
-- Override count and rate
-- Revenue lost by overrides
-- Manager name resolution from User collection
+**Financial Tracking:**
+- `clientPrice` - ціна для клієнта
+- `internalCost` - внутрішня собівартість
+- `purchasePrice` - ціна покупки на аукціоні
+- `estimatedMargin` - очікуваний прибуток (з quote)
+- `realCost` / `realRevenue` - реальні витрати/дохід
+- `realProfit` - **фактичний прибуток**
 
-**Source Performance:**
-- Quotes by source (vin/manual/admin/manager)
+**Pipeline Links:**
+- `quoteId` - зв'язок з quote (сценарій, маржа)
+- `leadId` - зв'язок з lead
+- `depositId` - зв'язок з депозитом
+- `vin` - VIN авто
+
+**Override Tracking:**
+- `overrideApplied` - чи був override
+- `overrideDelta` - втрата від override
+
+**Pipeline Analytics:**
+- Funnel: Quotes → Leads → Deals → Completed
 - Conversion rates
-- Revenue and margin by source
-
-**Timeline Analysis:**
-- 30-day quote/margin trend
-- Area charts with Recharts
-
-**Lost Revenue Analysis:**
-- Top price overrides with highest losses
-- Original vs override price delta
+- Manager performance по deals
+- Scenario performance (real profit)
 
 ### CRM Features ✅
 - Leads management with VIN linking
 - Customers database
-- Deals tracking
 - Task management
 - Staff/team management
 - Documents
 
-### Admin Features ✅
-- Calculator configuration
-- Route rates management
-- Auction fee rules
-- Pricing profiles
+## API Endpoints (Deals v2.0)
 
-## User Personas
-1. **Master Admin**: Full access, calculator config, analytics
-2. **Manager**: Quote creation, price override, lead management
-3. **Sales**: Lead follow-up, quote generation
+### Deals Pipeline
+- `POST /api/deals` - Create deal manually
+- `POST /api/deals/from-lead` - **Create deal from lead + quote**
+- `GET /api/deals` - List all deals
+- `GET /api/deals/:id` - Get deal by ID
+- `GET /api/deals/lead/:leadId` - Get deal by lead ID
+- `PUT /api/deals/:id` - Update deal
+- `PATCH /api/deals/:id/status` - **Update status with transition validation**
+- `PATCH /api/deals/:id/finance` - **Update financial data (real cost/revenue)**
+- `PATCH /api/deals/:id/bind-deposit` - Bind deposit to deal
+- `DELETE /api/deals/:id` - Delete deal
 
-## API Endpoints (Key)
+### Deals Analytics
+- `GET /api/deals/stats` - Aggregated statistics
+- `GET /api/deals/pipeline-analytics` - **Full funnel analytics**
 
-### Quote Analytics (NEW)
-- `GET /api/admin/quote-analytics` - Full dashboard data
-- `GET /api/admin/quote-analytics/overview` - KPI summary
-- `GET /api/admin/quote-analytics/scenarios` - Scenario performance
-- `GET /api/admin/quote-analytics/managers` - Manager performance
-- `GET /api/admin/quote-analytics/sources` - Source performance
-- `GET /api/admin/quote-analytics/timeline` - Timeline data
-- `GET /api/admin/quote-analytics/lost-revenue` - Lost revenue analysis
+## Test Results (Latest)
+```
+Backend:  100% (15/15 tests passed)
+Frontend: 85% (core functionality working)
 
-### Calculator
-- `POST /api/calculator/calculate` - Calculate delivery cost
-- `POST /api/calculator/quote` - Create quote with scenarios
-- `PATCH /api/calculator/quote/:id/scenario` - Set scenario
-- `PATCH /api/calculator/quote/:id/override` - Manager price override
-- `GET /api/calculator/quote/:id/audit` - Get audit history
-- `GET /api/calculator/admin/manager-analytics` - Override analytics
-
-### Leads
-- `POST /api/public/leads/from-quote` - Create lead from quote
-- `POST /api/public/leads/quick` - Quick lead creation
+Pipeline Test:
+- Created deal from lead + quote ✅
+- Status transitions validated ✅
+- Financial updates working ✅
+- Real Profit calculated: $2000 ✅
+- Completion rate: 100% ✅
+```
 
 ## Test Credentials
 - Admin: admin@crm.com / admin123
-
-## Test VINs (seeded)
-- WBA3B3C50EF123456: 2014 BMW 328i ($8,500)
-- WVWZZZ3CZWE123789: 2019 VW Tiguan ($15,500)
-- JN1TANT31U0000001: 2020 Nissan Rogue ($18,000)
-- 1HGCV1F34KA000001: 2019 Honda Accord ($12,500)
-- 5YJSA1E29KF000001: 2019 Tesla Model S ($35,000)
 
 ## What's Been Implemented
 - [x] Calculator Engine with configurable fees
@@ -144,20 +123,20 @@ Business intelligence dashboard for quote/revenue analysis:
 - [x] Manager Price Override with Audit
 - [x] VIN Intelligence integration
 - [x] Lead conversion from quotes
-- [x] CRM Admin panel with navigation
-- [x] Test data seeding
-- [x] **Quote Analytics Dashboard** (2026-03-27)
+- [x] Quote Analytics Dashboard
+- [x] **Deals System v2.0 with full pipeline** (2026-03-27)
 
 ## Prioritized Backlog
 
-### P0 (Critical)
+### P0 (Critical) - DONE ✅
 - ✅ Manager Price Override + Audit
 - ✅ Quote Analytics Dashboard
+- ✅ Deals Pipeline (QUOTE → LEAD → DEAL → PROFIT)
 
 ### P1 (High)
+- [ ] Customer 360 (timeline, full history)
 - [ ] Pricing Profiles (A/B testing different margin strategies)
-- [ ] WebSocket for real-time timers
-- [ ] Manager Performance Dashboard (detailed view)
+- [ ] Deposit Management integration with deals
 
 ### P2 (Medium)
 - [ ] SMS/Email notifications
@@ -170,9 +149,9 @@ Business intelligence dashboard for quote/revenue analysis:
 - [ ] AI pricing recommendations
 
 ## Next Tasks
-1. **Pricing Profiles** - Switch between Standard/Premium/Promo margin profiles
-2. **Auto-optimization** - System suggests optimal scenario based on historical data
-3. **Quote Analytics on VIN/Make/Model level** - drill-down analysis
+1. **Customer 360** - повна картина клієнта: leads + quotes + deals + timeline
+2. **Deposit Management** - інтеграція депозитів з deals pipeline
+3. **Auto-optimization** - система пропонує оптимальний сценарій
 
 ---
 Last Updated: 2026-03-27
