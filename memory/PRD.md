@@ -6,6 +6,7 @@ CRM система для автобізнесу з:
 - Публічний UI layer (каталог, VIN перевірка)
 - Admin CRM панель (lead management)
 - Auction Ranking Engine з live таймерами
+- Calculator Engine (pricing engine для доставки)
 
 ## Architecture
 - **Frontend**: React.js + Tailwind CSS
@@ -16,12 +17,6 @@ CRM система для автобізнесу з:
 ### URL Structure
 - Public: `/` (home), `/vehicles` (catalog), `/vin-check` (VIN search)
 - Admin: `/admin/login`, `/admin/dashboard`, etc.
-
-## Core Requirements
-1. Публічний сайт для клієнтів (без авторизації)
-2. VIN перевірка з даними з аукціонів
-3. Каталог авто з таймерами аукціонів
-4. Admin CRM для менеджерів
 
 ## What's Implemented (27.03.2026)
 
@@ -41,34 +36,91 @@ CRM система для автобізнесу з:
 - [x] Admin Login/Dashboard
 - [x] Розділення public/admin routing
 
+### P1 - Calculator Engine (DONE - 27.03.2026)
+- [x] CalculatorProfile schema - налаштування профілю
+- [x] RouteRate schema - таблиця ставок доставки
+- [x] AuctionFeeRule schema - bracket-based auction fees
+- [x] Quote schema - збереження розрахунків
+- [x] CalculatorEngineService - розрахунок total
+- [x] CalculatorAdminService - управління конфігами
+- [x] Auto-seed при старті модуля
+- [x] Hidden fee логіка (margin control)
+
+### Calculator Features
+- Розрахунок повної вартості: car price + auction fee + insurance + shipping + customs + fees
+- Admin-configurable: всі ставки міняються через API
+- Hidden fee: не показується клієнту, враховується в internal total
+- Quote snapshots: зберігання розрахунків для CRM/leads
+- Bracket-based auction fees: 9 цінових діапазонів
+
 ### APIs (WORKING)
-- `GET /api/auction-ranking/stats` - статистика
-- `GET /api/auction-ranking/hot` - гарячі лоти
-- `GET /api/auction-ranking/ending-soon` - скоро закінчуються
-- `GET /api/auction-ranking/upcoming` - майбутні аукціони
-- `GET /api/public/vin/:vin` - публічний VIN пошук
+**Public:**
+- `POST /api/calculator/calculate` - розрахунок вартості
+- `POST /api/calculator/quote` - створення quote
+- `GET /api/calculator/quote/:id` - отримання quote
+- `GET /api/calculator/ports` - доступні порти та типи авто
+
+**Admin:**
+- `GET /api/calculator/config/profile` - активний профіль
+- `PATCH /api/calculator/config/profile` - оновити налаштування
+- `GET /api/calculator/config/routes/:profileCode` - route rates
+- `POST /api/calculator/config/routes` - upsert rate
+- `GET /api/calculator/config/auction-fees/:profileCode` - fee brackets
+- `POST /api/calculator/config/auction-fees` - upsert bracket
+
+## Calculator Pricing Structure
+
+### Default Rates (Bulgaria Profile)
+**USA Inland Delivery:**
+- NJ: $475 (sedan) / $525 (bigSUV)
+- GA: $450 / $500
+- TX: $550 / $600
+- CA: $900 / $1,000
+
+**Ocean Freight:**
+- NJ: $525 (sedan) / $700 (SUV) / $800 (bigSUV)
+- GA: $500 / $650 / $750
+- TX: $600 / $950 / $1,050
+- CA: $950 / $1,450 / $1,550
+
+**EU Delivery:** $1,200 (sedan) / $1,400 (SUV) / $1,600 (bigSUV)
+
+**Fixed Fees:**
+- Insurance: 2% of (car price + auction fee)
+- Customs: 10% of car price
+- USA Handling: $150
+- Bank Fee: $100
+- EU Port Handling: $600
+- Company Fee: $940
+- Documentation: $50
+- Title Fee: $75
+
+**Hidden Fee (margin):**
+- Under $5,000: $700
+- Over $5,000: $1,400
 
 ## Prioritized Backlog
 
 ### P1 - High Priority
+- [ ] Calculator UI на VIN page та каталозі
+- [ ] Lead Conversion Flow (VIN → quote → lead)
 - [ ] WebSocket для real-time оновлень таймерів
-- [ ] Cron jobs для автопарсингу Copart/IAAI
-- [ ] Source Health Dashboard UI
 
 ### P2 - Medium Priority
-- [ ] Lead form submission від VIN check
+- [ ] Calculator Admin UI page
+- [ ] Quote history в CRM
 - [ ] Email notifications
-- [ ] Auction Event Layer (повні таймери, upcoming)
+- [ ] Source Health Dashboard UI
 
 ### P3 - Low Priority
-- [ ] Discovery UI в frontend
-- [ ] Advanced filtering в каталозі
-- [ ] Analytics dashboard
+- [ ] Quote versioning
+- [ ] Import presets (premium margin, promo mode)
+- [ ] A/B testing для маржі
 
 ## Test Credentials
 - Admin: `admin@crm.com` / `admin123`
 
 ## Next Tasks
-1. Implement WebSocket для live таймерів
-2. Add lead form submission flow
-3. Create Source Health Dashboard
+1. Add Calculator to VIN Check page UI
+2. Implement Lead Conversion Flow
+3. Create Calculator Admin page
