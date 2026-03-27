@@ -16,7 +16,7 @@ CRM система для автобізнесу з:
 
 ### URL Structure
 - Public: `/` (home), `/vehicles` (catalog), `/vin-check` (VIN search)
-- Admin: `/admin/login`, `/admin/dashboard`, etc.
+- Admin: `/admin/login`, `/admin/dashboard`, `/admin/leads`, etc.
 
 ## What's Implemented (27.03.2026)
 
@@ -36,7 +36,7 @@ CRM система для автобізнесу з:
 - [x] Admin Login/Dashboard
 - [x] Розділення public/admin routing
 
-### P1 - Calculator Engine (DONE - 27.03.2026)
+### P1 - Calculator Engine (DONE)
 - [x] CalculatorProfile schema - налаштування профілю
 - [x] RouteRate schema - таблиця ставок доставки
 - [x] AuctionFeeRule schema - bracket-based auction fees
@@ -46,22 +46,34 @@ CRM система для автобізнесу з:
 - [x] Auto-seed при старті модуля
 - [x] Hidden fee логіка (margin control)
 
-### P1 - Lead Conversion Flow (FIXED - 27.03.2026)
-- [x] POST /api/public/leads/quick - швидке створення lead
-- [x] POST /api/public/leads/from-quote - створення lead з quote
-- [x] GET /api/public/leads/status/:id - перевірка статусу lead
-- [x] Calculator UI на VIN Check page з калькулятором вартості
-- [x] Lead form modal на VIN Check page
+### 🔥 MONETIZATION FLOW (DONE - 27.03.2026)
+**Full Revenue Pipeline:**
+```
+VIN Search → Calculator → Quote Snapshot → Lead → CRM
+```
 
-### Calculator Features
-- Розрахунок повної вартості: car price + auction fee + insurance + shipping + customs + fees
-- Admin-configurable: всі ставки міняються через API
-- Hidden fee: не показується клієнту, враховується в internal total
-- Quote snapshots: зберігання розрахунків для CRM/leads
-- Bracket-based auction fees: 9 цінових діапазонів
+**Реалізовано:**
+- [x] Calculator UI на VIN Check page (порт, тип авто, breakdown)
+- [x] Quote creation з збереженням visible та internal totals
+- [x] Lead from Quote conversion з metadata (quoteId, internalTotal, hiddenFee)
+- [x] Quick Lead creation без quote
+- [x] **MARGIN CONTROL**: Менеджер бачить внутрішню ціну + приховану маржу
+- [x] CRM Leads table з колонками "Ціна клієнта" та "Внутрішня ціна"
+- [x] Кнопка "Хочу купити це авто" на VIN page
+
+### Margin Control System
+```
+Client sees:    $22,699 (visible total)
+Manager sees:   $24,099 (internal total) [+$1,400 hidden fee]
+```
+
+**Hidden Fee Logic:**
+- Under $5,000 car price: $700 margin
+- Over $5,000 car price: $1,400 margin
 
 ### APIs (WORKING)
 **Public:**
+- `GET /api/public/vin/:vin` - пошук по VIN
 - `POST /api/calculator/calculate` - розрахунок вартості
 - `POST /api/calculator/quote` - створення quote
 - `GET /api/calculator/quote/:id` - отримання quote
@@ -73,12 +85,11 @@ CRM система для автобізнесу з:
 **Admin:**
 - `POST /api/auth/login` - авторизація
 - `GET /api/auth/me` - поточний користувач
+- `GET /api/leads` - список лідів
+- `PUT /api/leads/:id` - оновлення lead
+- `DELETE /api/leads/:id` - видалення lead
 - `GET /api/calculator/config/profile` - активний профіль
 - `PATCH /api/calculator/config/profile` - оновити налаштування
-- `GET /api/calculator/config/routes/:profileCode` - route rates
-- `POST /api/calculator/config/routes` - upsert rate
-- `GET /api/calculator/config/auction-fees/:profileCode` - fee brackets
-- `POST /api/calculator/config/auction-fees` - upsert bracket
 
 ## Calculator Pricing Structure
 
@@ -107,22 +118,19 @@ CRM система для автобізнесу з:
 - Documentation: $50
 - Title Fee: $75
 
-**Hidden Fee (margin):**
-- Under $5,000: $700
-- Over $5,000: $1,400
-
 ## Prioritized Backlog
 
-### P1 - High Priority (COMPLETED)
+### P1 - High Priority (COMPLETED ✅)
 - [x] Calculator UI на VIN page та каталозі
 - [x] Lead Conversion Flow (VIN → quote → lead)
+- [x] Margin Control (internal vs visible pricing)
 - [ ] WebSocket для real-time оновлень таймерів
 
 ### P2 - Medium Priority
-- [ ] Calculator Admin UI page
+- [ ] Calculator Admin UI page (редагування ставок)
 - [ ] Quote history в CRM
+- [ ] Manager price editing tools
 - [ ] Email notifications
-- [ ] Source Health Dashboard UI
 
 ### P3 - Low Priority
 - [ ] Quote versioning
@@ -132,13 +140,14 @@ CRM система для автобізнесу з:
 ## Test Credentials
 - Admin: `admin@crm.com` / `admin123`
 
-## Recent Fixes (27.03.2026)
-1. Added JWT_SECRET to backend .env
-2. Fixed Lead validation - added class-validator decorators to DTOs
-3. Fixed Lead source enum - mapping to valid LeadSource values
-4. Fixed import paths in public-lead.controller.ts and lead.schema.ts
+## Recent Updates (27.03.2026)
+1. ✅ Implemented full Monetization Flow
+2. ✅ Added margin control (visible vs internal pricing)
+3. ✅ Updated CRM Leads page with dual price columns
+4. ✅ Added VIN column to leads table
+5. ✅ Fixed Lead API validation issues
 
-## Next Tasks
-1. Create Calculator Admin UI page
-2. Implement WebSocket for real-time auction timers
-3. Add Quote history view in CRM dashboard
+## Next Steps
+1. Calculator Admin UI - manage rates without code
+2. WebSocket for real-time auction timers
+3. Quote history view in CRM
