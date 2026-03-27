@@ -1,7 +1,7 @@
 # BIBI Cars CRM - VIN Intelligence Platform
 
 ## Project Summary
-Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine, Quote Management, and Manager Price Override system.
+Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine, Quote Management, Manager Price Override system, and **Quote Analytics Dashboard**.
 
 ## Architecture
 - **Backend**: NestJS (TypeScript) + FastAPI proxy
@@ -32,7 +32,7 @@ Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine
   - Aggressive: +10% from visible total
 - Quote creation with scenario selection
 
-### Manager Price Override + Audit ✅ (NEW)
+### Manager Price Override + Audit ✅
 - Manager can override final price with reason
 - Full audit trail recorded
 - Impact on margin calculated
@@ -46,6 +46,44 @@ Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine
 - Linked to leads and customers
 - Scenario selection per quote
 - Audit history per quote
+
+### Quote Analytics Dashboard ✅ (NEW - 2026-03-27)
+Business intelligence dashboard for quote/revenue analysis:
+
+**KPI Metrics:**
+- Total Quotes
+- Quote → Lead Conversion Rate
+- Estimated Margin (Hidden Fee total)
+- Visible Revenue
+- Total Hidden Fee
+- Lost Revenue (from overrides)
+
+**Scenario Performance:**
+- Conversion rate per scenario (minimum/recommended/aggressive)
+- Average price and margin per scenario
+- Visual progress bars
+
+**Manager Performance:**
+- Quotes count per manager
+- Conversion rate
+- Average margin
+- Total margin
+- Override count and rate
+- Revenue lost by overrides
+- Manager name resolution from User collection
+
+**Source Performance:**
+- Quotes by source (vin/manual/admin/manager)
+- Conversion rates
+- Revenue and margin by source
+
+**Timeline Analysis:**
+- 30-day quote/margin trend
+- Area charts with Recharts
+
+**Lost Revenue Analysis:**
+- Top price overrides with highest losses
+- Original vs override price delta
 
 ### CRM Features ✅
 - Leads management with VIN linking
@@ -67,6 +105,15 @@ Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine
 3. **Sales**: Lead follow-up, quote generation
 
 ## API Endpoints (Key)
+
+### Quote Analytics (NEW)
+- `GET /api/admin/quote-analytics` - Full dashboard data
+- `GET /api/admin/quote-analytics/overview` - KPI summary
+- `GET /api/admin/quote-analytics/scenarios` - Scenario performance
+- `GET /api/admin/quote-analytics/managers` - Manager performance
+- `GET /api/admin/quote-analytics/sources` - Source performance
+- `GET /api/admin/quote-analytics/timeline` - Timeline data
+- `GET /api/admin/quote-analytics/lost-revenue` - Lost revenue analysis
 
 ### Calculator
 - `POST /api/calculator/calculate` - Calculate delivery cost
@@ -99,16 +146,18 @@ Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine
 - [x] Lead conversion from quotes
 - [x] CRM Admin panel with navigation
 - [x] Test data seeding
+- [x] **Quote Analytics Dashboard** (2026-03-27)
 
 ## Prioritized Backlog
 
 ### P0 (Critical)
 - ✅ Manager Price Override + Audit
+- ✅ Quote Analytics Dashboard
 
 ### P1 (High)
-- [ ] Pricing Profiles (A/B testing)
+- [ ] Pricing Profiles (A/B testing different margin strategies)
 - [ ] WebSocket for real-time timers
-- [ ] Quote analytics dashboard
+- [ ] Manager Performance Dashboard (detailed view)
 
 ### P2 (Medium)
 - [ ] SMS/Email notifications
@@ -117,13 +166,13 @@ Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine
 
 ### P3 (Nice to have)
 - [ ] Quick Quote widget
-- [ ] Manager performance dashboard
 - [ ] Automated follow-up reminders
+- [ ] AI pricing recommendations
 
 ## Next Tasks
-1. Quote Analytics Dashboard - visual charts for quote conversion
-2. Pricing Profiles - switch between Standard/Premium/Promo
-3. Manager performance dashboard with override analytics
+1. **Pricing Profiles** - Switch between Standard/Premium/Promo margin profiles
+2. **Auto-optimization** - System suggests optimal scenario based on historical data
+3. **Quote Analytics on VIN/Make/Model level** - drill-down analysis
 
 ---
 Last Updated: 2026-03-27
