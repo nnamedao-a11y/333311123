@@ -9,6 +9,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Vehicle, VehicleSchema } from '../ingestion/schemas/vehicle.schema';
+import { Auction, AuctionSchema } from '../auction-ranking/auction.schema';
 import { VinCache, VinCacheSchema } from './vin-cache.service';
 import { SearchProviderService } from './search.provider';
 import { UrlFilterService } from './url-filter.service';
@@ -37,6 +38,7 @@ import { VinSearchOrchestratorService } from './providers/vin-search-orchestrato
   imports: [
     MongooseModule.forFeature([
       { name: Vehicle.name, schema: VehicleSchema },
+      { name: Auction.name, schema: AuctionSchema },
       { name: VinCache.name, schema: VinCacheSchema },
     ]),
     PipelineModule,

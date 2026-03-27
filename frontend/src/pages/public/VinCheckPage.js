@@ -54,7 +54,7 @@ const VinCheckPage = () => {
     setResult(null);
 
     try {
-      const res = await axios.get(`${API_URL}/api/vin/public/${searchVin.toUpperCase()}`);
+      const res = await axios.get(`${API_URL}/api/public/vin/${searchVin.toUpperCase()}`);
       setResult(res.data);
       
       // Update URL
@@ -139,7 +139,7 @@ const VinCheckPage = () => {
       {result && (
         <section className="py-12">
           <div className="container mx-auto px-4">
-            {result.success && result.merged ? (
+            {result.vin && !result.message ? (
               <VinResult data={result} onRequestCall={() => setShowLeadForm(true)} />
             ) : (
               <div className="max-w-2xl mx-auto text-center py-12">
@@ -175,7 +175,8 @@ const VinCheckPage = () => {
 
 // VIN Result Component
 const VinResult = ({ data, onRequestCall }) => {
-  const { merged, candidates, stats } = data;
+  // data is already the merged vehicle info (vin, title, price, images, etc.)
+  const merged = data;
   const [selectedImage, setSelectedImage] = useState(0);
 
   return (
@@ -226,7 +227,7 @@ const VinResult = ({ data, onRequestCall }) => {
               <InfoCard icon={Calendar} label="Рік" value={merged.year} />
             )}
             {merged.mileage && (
-              <InfoCard icon={Gauge} label="Пробіг" value={`${merged.mileage.toLocaleString()} mi`} />
+              <InfoCard icon={Gauge} label="Пробіг" value={`${Number(merged.mileage).toLocaleString()} mi`} />
             )}
             {merged.location && (
               <InfoCard icon={MapPin} label="Локація" value={merged.location} />
@@ -246,18 +247,18 @@ const VinResult = ({ data, onRequestCall }) => {
         </div>
 
         {/* Sources */}
-        {candidates?.length > 0 && (
+        {merged.sources?.length > 0 && (
           <div className="bg-white rounded-xl border border-zinc-200 p-6">
             <h3 className="font-semibold text-zinc-900 mb-4">
-              Знайдено в {candidates.length} джерелах
+              Знайдено в {merged.sources.length} джерелах
             </h3>
             <div className="space-y-2">
-              {candidates.slice(0, 5).map((c, i) => (
+              {merged.sources.map((sourceName, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-600">{c.sourceName}</span>
+                  <span className="text-zinc-600">{sourceName}</span>
                   <div className="flex items-center gap-2">
                     <CheckCircle size={16} className="text-green-500" />
-                    <span className="text-zinc-400">{(c.confidence * 100).toFixed(0)}%</span>
+                    <span className="text-zinc-400">Знайдено</span>
                   </div>
                 </div>
               ))}
