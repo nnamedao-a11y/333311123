@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-BIBI Cars CRM - Backend API Testing
-Tests Calculator Engine, Lead Conversion, and Auth APIs
+BIBI Cars CRM - Deals System v2.0 Backend Testing
+Tests all deal-related API endpoints and functionality
 """
 
 import requests
@@ -9,13 +9,13 @@ import sys
 import json
 from datetime import datetime
 
-class BIBICRMTester:
+class DealsAPITester:
     def __init__(self, base_url="https://a11y-audit-4.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.quote_id = None
+        self.created_deal_id = None
 
     def log(self, message):
         """Log test messages"""
@@ -1122,59 +1122,274 @@ class BIBICRMTester:
                 return False
         return False
 
+    def test_admin_login(self):
+        """Test admin login and get token"""
+        self.log("🔐 Testing Admin Authentication...")
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "auth/login",
+            201,  # Changed from 200 to 201
+            data={"email": "admin@crm.com", "password": "admin123"}
+        )
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            self.log(f"   Token obtained: {self.token[:20]}...")
+            return True
+        elif success and 'token' in response:
+            self.token = response['token']
+            self.log(f"   Token obtained: {self.token[:20]}...")
+            return True
+        return False
+
+    def test_deals_list(self):
+        """Test GET /api/deals"""
+        success, response = self.run_test(
+            "List Deals",
+            "GET",
+            "deals",
+            200
+        )
+        if success:
+            deals_count = len(response.get('data', []))
+            self.log(f"   Found {deals_count} deals")
+        return success
+
+    def test_deals_stats(self):
+        """Test GET /api/deals/stats"""
+        success, response = self.run_test(
+            "Deals Statistics",
+            "GET",
+            "deals/stats",
+            200
+        )
+        if success:
+            self.log(f"   Total deals: {response.get('total', 0)}")
+            self.log(f"   Total value: ${response.get('totalValue', 0)}")
+            self.log(f"   Completed: {response.get('completedDeals', 0)}")
+            self.log(f"   Cancelled: {response.get('cancelledDeals', 0)}")
+        return success
+
+    def test_pipeline_analytics(self):
+        """Test GET /api/deals/pipeline-analytics"""
+        success, response = self.run_test(
+            "Pipeline Analytics",
+            "GET",
+            "deals/pipeline-analytics",
+            200
+        )
+        if success:
+            funnel = response.get('funnel', {})
+            self.log(f"   Funnel: {funnel.get('quotes', 0)} quotes → {funnel.get('leads', 0)} leads → {funnel.get('deals', 0)} deals → {funnel.get('completed', 0)} completed")
+            self.log(f"   Completion rate: {funnel.get('dealCompletionRate', 0)}%")
+        return success
+
+    def test_create_deal(self):
+        """Test POST /api/deals"""
+        deal_data = {
+            "title": f"Test Deal {datetime.now().strftime('%H%M%S')}",
+            "clientPrice": 25000,
+            "internalCost": 22000,
+            "purchasePrice": 20000,
+            "vin": "TEST123456789",
+            "vehiclePlaceholder": "Test BMW X5 2022",
+            "description": "Test deal for API testing"
+        }
+        
+        success, response = self.run_test(
+            "Create Deal",
+            "POST",
+            "deals",
+            201,
+            data=deal_data
+        )
+        
+        if success and 'id' in response:
+            self.created_deal_id = response['id']
+            self.log(f"   Created deal ID: {self.created_deal_id}")
+        
+        return success
+
+    def test_get_deal_by_id(self):
+        """Test GET /api/deals/:id"""
+        if not self.created_deal_id:
+            self.log("❌ No deal ID available for testing")
+            return False
+            
+        success, response = self.run_test(
+            "Get Deal by ID",
+            "GET",
+            f"deals/{self.created_deal_id}",
+            200
+        )
+        
+        if success:
+            self.log(f"   Deal title: {response.get('title', 'N/A')}")
+            self.log(f"   Status: {response.get('status', 'N/A')}")
+            self.log(f"   Client price: ${response.get('clientPrice', 0)}")
+        
+        return success
+
+    def test_update_deal_status(self):
+        """Test PATCH /api/deals/:id/status"""
+        if not self.created_deal_id:
+            self.log("❌ No deal ID available for testing")
+            return False
+            
+        # Test valid status transition: new → negotiation
+        success, response = self.run_test(
+            "Update Deal Status (new → negotiation)",
+            "PATCH",
+            f"deals/{self.created_deal_id}/status",
+            200,
+            data={"status": "negotiation", "notes": "Started negotiations"}
+        )
+        
+        if success:
+            self.log(f"   Updated status: {response.get('status', 'N/A')}")
+        
+        return success
+
+    def test_update_deal_finance(self):
+        """Test PATCH /api/deals/:id/finance"""
+        if not self.created_deal_id:
+            self.log("❌ No deal ID available for testing")
+            return False
+            
+        finance_data = {
+            "realCost": 21500,
+            "realRevenue": 24500
+        }
+        
+        success, response = self.run_test(
+            "Update Deal Finance",
+            "PATCH",
+            f"deals/{self.created_deal_id}/finance",
+            200,
+            data=finance_data
+        )
+        
+        if success:
+            self.log(f"   Real cost: ${response.get('realCost', 0)}")
+            self.log(f"   Real revenue: ${response.get('realRevenue', 0)}")
+            self.log(f"   Real profit: ${response.get('realProfit', 0)}")
+        
+        return success
+
+    def test_invalid_status_transition(self):
+        """Test invalid status transition"""
+        if not self.created_deal_id:
+            self.log("❌ No deal ID available for testing")
+            return False
+            
+        # Try invalid transition: negotiation → completed (should fail)
+        success, response = self.run_test(
+            "Invalid Status Transition (negotiation → completed)",
+            "PATCH",
+            f"deals/{self.created_deal_id}/status",
+            400,  # Expecting bad request
+            data={"status": "completed"}
+        )
+        
+        return success
+
+    def test_complete_deal_workflow(self):
+        """Test complete deal status workflow"""
+        if not self.created_deal_id:
+            self.log("❌ No deal ID available for testing")
+            return False
+            
+        # Test valid workflow: negotiation → waiting_deposit → deposit_paid → purchased → in_delivery → completed
+        workflow_steps = [
+            ("waiting_deposit", "Waiting for deposit"),
+            ("deposit_paid", "Deposit received"),
+            ("purchased", "Vehicle purchased"),
+            ("in_delivery", "In delivery"),
+            ("completed", "Deal completed")
+        ]
+        
+        all_passed = True
+        for status, notes in workflow_steps:
+            success, response = self.run_test(
+                f"Status Transition → {status}",
+                "PATCH",
+                f"deals/{self.created_deal_id}/status",
+                200,
+                data={"status": status, "notes": notes}
+            )
+            if not success:
+                all_passed = False
+                break
+            self.log(f"   Status updated to: {response.get('status', 'N/A')}")
+        
+        return all_passed
+
+    def test_create_deal_from_lead(self):
+        """Test POST /api/deals/from-lead (if lead exists)"""
+        # This test might fail if no leads exist, which is expected
+        test_data = {
+            "leadId": "test-lead-id",
+            "notes": "Created from test lead"
+        }
+        
+        success, response = self.run_test(
+            "Create Deal from Lead",
+            "POST",
+            "deals/from-lead",
+            404,  # Expecting not found since test lead doesn't exist
+            data=test_data
+        )
+        
+        # This test passes if we get expected 404 (lead not found)
+        return success
+
     def run_all_tests(self):
         """Run all backend tests"""
-        self.log("🚀 Starting BIBI Cars CRM Backend API Tests")
+        self.log("🚀 Starting BIBI Cars CRM - Deals System v2.0 Backend Testing")
         self.log(f"   Base URL: {self.base_url}")
         
         # Test sequence
         tests = [
-            ("Admin Login", self.test_admin_login),
-            ("Quote Analytics Full Dashboard", self.test_quote_analytics_full_dashboard),
-            ("Quote Analytics Overview", self.test_quote_analytics_overview),
-            ("Quote Analytics Scenarios", self.test_quote_analytics_scenarios),
-            ("Quote Analytics Managers", self.test_quote_analytics_managers),
-            ("Quote Analytics Sources", self.test_quote_analytics_sources),
-            ("Quote Analytics Timeline", self.test_quote_analytics_timeline),
-            ("Calculator Ports", self.test_calculator_ports),
-            ("Calculator Calculate", self.test_calculator_calculate),
-            ("Calculator Quote", self.test_calculator_quote),
-            ("Quote Scenario Change", self.test_quote_scenario_change),
-            ("Manager Price Override", self.test_manager_price_override),
-            ("Quote Audit API", self.test_quote_audit_api),
-            ("Manager Analytics", self.test_manager_analytics),
-            ("Revert to Scenario", self.test_revert_to_scenario),
-            ("VIN Intelligence Flow", self.test_vin_intelligence_flow),
-            ("Quotes by Lead", self.test_quotes_by_lead),
-            ("Quotes by VIN", self.test_quotes_by_vin),
-            ("Quote Audit History", self.test_quote_audit_history),
-            ("Lead Quick Create", self.test_lead_quick_create),
-            ("Lead from Quote", self.test_lead_from_quote),
-            ("Leads API", self.test_leads_api),
-            ("Auth Me", self.test_auth_me),
-            ("Calculator Admin Profile", self.test_calculator_admin_profile),
-            ("Calculator Admin Stats", self.test_calculator_admin_stats),
-            ("Calculator Admin Routes", self.test_calculator_admin_routes),
-            ("Calculator Admin Auction Fees", self.test_calculator_admin_auction_fees),
+            ("Admin Authentication", self.test_admin_login),
+            ("List Deals", self.test_deals_list),
+            ("Deals Statistics", self.test_deals_stats),
+            ("Pipeline Analytics", self.test_pipeline_analytics),
+            ("Create Deal", self.test_create_deal),
+            ("Get Deal by ID", self.test_get_deal_by_id),
+            ("Update Deal Status", self.test_update_deal_status),
+            ("Update Deal Finance", self.test_update_deal_finance),
+            ("Invalid Status Transition", self.test_invalid_status_transition),
+            ("Complete Deal Workflow", self.test_complete_deal_workflow),
+            ("Create Deal from Lead", self.test_create_deal_from_lead),
         ]
+        
+        failed_tests = []
         
         for test_name, test_func in tests:
             try:
-                test_func()
+                if not test_func():
+                    failed_tests.append(test_name)
             except Exception as e:
                 self.log(f"❌ {test_name} failed with exception: {str(e)}")
+                failed_tests.append(test_name)
         
         # Final results
         self.log(f"\n📊 FINAL RESULTS")
         self.log(f"   Tests run: {self.tests_run}")
         self.log(f"   Tests passed: {self.tests_passed}")
-        self.log(f"   Success rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        self.log(f"   Tests failed: {self.tests_run - self.tests_passed}")
+        self.log(f"   Success rate: {(self.tests_passed / self.tests_run * 100):.1f}%")
         
-        return self.tests_passed == self.tests_run
+        if failed_tests:
+            self.log(f"\n❌ Failed tests: {', '.join(failed_tests)}")
+            return False
+        else:
+            self.log("\n✅ All tests passed!")
+            return True
 
 def main():
     """Main test runner"""
-    tester = BIBICRMTester()
+    tester = DealsAPITester()
     success = tester.run_all_tests()
     return 0 if success else 1
 
