@@ -16,7 +16,8 @@ import {
   Globe,
   Database,
   Car,
-  MagnifyingGlass
+  MagnifyingGlass,
+  Calculator
 } from '@phosphor-icons/react';
 
 const Layout = () => {
@@ -45,10 +46,11 @@ const Layout = () => {
   const parserNavItem = { path: '/parser', icon: Database, label: 'Парсер' };
   const vehiclesNavItem = { path: '/vehicles', icon: Car, label: 'Авто' };
   const vinSearchNavItem = { path: '/vin', icon: MagnifyingGlass, label: 'VIN Пошук' };
+  const calculatorNavItem = { path: '/calculator', icon: Calculator, label: 'Калькулятор' };
   
   // Add extra items for master_admin only
   const navItems = user?.role === 'master_admin' 
-    ? [...baseNavItems, vehiclesNavItem, vinSearchNavItem, parserNavItem]
+    ? [...baseNavItems, vehiclesNavItem, vinSearchNavItem, calculatorNavItem, parserNavItem]
     : user?.role === 'moderator'
     ? [...baseNavItems, vehiclesNavItem, vinSearchNavItem, parserNavItem]
     : baseNavItems;

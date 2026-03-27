@@ -336,6 +336,193 @@ class BIBICRMTester:
                 return False
         return False
 
+    def test_calculator_admin_profile(self):
+        """Test calculator admin profile endpoints"""
+        self.log("\n=== TESTING CALCULATOR ADMIN PROFILE ===")
+        
+        if not self.token:
+            self.log("❌ No token available for admin test")
+            return False
+        
+        # Get active profile
+        success, response = self.run_test(
+            "Get Active Profile",
+            "GET",
+            "calculator/config/profile",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        profile = response
+        if not profile:
+            self.log("❌ No active profile found")
+            return False
+            
+        self.log(f"✅ Found active profile: {profile.get('name', 'Unknown')}")
+        
+        # Test profile update
+        update_data = {
+            "name": profile.get('name', 'Test Profile'),
+            "insuranceRate": 0.02,
+            "usaHandlingFee": 500
+        }
+        
+        success, response = self.run_test(
+            "Update Profile",
+            "PATCH", 
+            "calculator/config/profile",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            self.log("✅ Profile updated successfully")
+            return True
+        return False
+
+    def test_calculator_admin_stats(self):
+        """Test calculator admin stats"""
+        self.log("\n=== TESTING CALCULATOR ADMIN STATS ===")
+        
+        if not self.token:
+            self.log("❌ No token available for admin test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Calculator Stats",
+            "GET",
+            "calculator/admin/stats",
+            200
+        )
+        
+        if success:
+            if 'totalQuotes' in response and 'profiles' in response:
+                self.log(f"✅ Stats: {response['totalQuotes']} quotes, {response['profiles']} profiles")
+                return True
+            else:
+                self.log("❌ Invalid stats response format")
+                return False
+        return False
+
+    def test_calculator_admin_routes(self):
+        """Test calculator admin route rates"""
+        self.log("\n=== TESTING CALCULATOR ADMIN ROUTES ===")
+        
+        if not self.token:
+            self.log("❌ No token available for admin test")
+            return False
+        
+        # First get active profile to get profile code
+        success, profile = self.run_test(
+            "Get Profile for Routes",
+            "GET",
+            "calculator/config/profile", 
+            200
+        )
+        
+        if not success or not profile or not profile.get('code'):
+            self.log("❌ No profile code available for routes test")
+            return False
+            
+        profile_code = profile['code']
+        
+        # Get route rates
+        success, response = self.run_test(
+            "Get Route Rates",
+            "GET",
+            f"calculator/config/routes/{profile_code}",
+            200
+        )
+        
+        if success:
+            routes = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(routes)} route rates")
+            
+            # Test adding a new route rate
+            new_route = {
+                "profileCode": profile_code,
+                "rateType": "usa_inland",
+                "originCode": "TEST",
+                "vehicleType": "sedan",
+                "amount": 1000
+            }
+            
+            success, response = self.run_test(
+                "Add Route Rate",
+                "POST",
+                "calculator/config/routes",
+                201,
+                data=new_route
+            )
+            
+            if success:
+                self.log("✅ Route rate added successfully")
+                return True
+            else:
+                self.log("❌ Failed to add route rate")
+                return False
+        return False
+
+    def test_calculator_admin_auction_fees(self):
+        """Test calculator admin auction fee rules"""
+        self.log("\n=== TESTING CALCULATOR ADMIN AUCTION FEES ===")
+        
+        if not self.token:
+            self.log("❌ No token available for admin test")
+            return False
+        
+        # First get active profile to get profile code
+        success, profile = self.run_test(
+            "Get Profile for Auction Fees",
+            "GET",
+            "calculator/config/profile",
+            200
+        )
+        
+        if not success or not profile or not profile.get('code'):
+            self.log("❌ No profile code available for auction fees test")
+            return False
+            
+        profile_code = profile['code']
+        
+        # Get auction fee rules
+        success, response = self.run_test(
+            "Get Auction Fee Rules",
+            "GET",
+            f"calculator/config/auction-fees/{profile_code}",
+            200
+        )
+        
+        if success:
+            rules = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(rules)} auction fee rules")
+            
+            # Test adding a new auction fee rule
+            new_rule = {
+                "profileCode": profile_code,
+                "minBid": 50000,
+                "maxBid": 60000,
+                "fee": 2500
+            }
+            
+            success, response = self.run_test(
+                "Add Auction Fee Rule",
+                "POST",
+                "calculator/config/auction-fees",
+                201,
+                data=new_rule
+            )
+            
+            if success:
+                self.log("✅ Auction fee rule added successfully")
+                return True
+            else:
+                self.log("❌ Failed to add auction fee rule")
+                return False
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("🚀 Starting BIBI Cars CRM Backend API Tests")
@@ -351,6 +538,10 @@ class BIBICRMTester:
             ("Lead from Quote", self.test_lead_from_quote),
             ("Leads API", self.test_leads_api),
             ("Auth Me", self.test_auth_me),
+            ("Calculator Admin Profile", self.test_calculator_admin_profile),
+            ("Calculator Admin Stats", self.test_calculator_admin_stats),
+            ("Calculator Admin Routes", self.test_calculator_admin_routes),
+            ("Calculator Admin Auction Fees", self.test_calculator_admin_auction_fees),
         ]
         
         for test_name, test_func in tests:

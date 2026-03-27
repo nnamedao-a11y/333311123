@@ -1,0 +1,32 @@
+{
+  "summary": "Completed comprehensive testing of Calculator Admin UI - all core functionality working correctly",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Calculator Admin page loads at /admin/calculator",
+    "Profile Settings: name, country, currency, fees are editable",
+    "Hidden Fees (Margin Control): threshold, under/over values editable",
+    "USA Inland Rates table displays and rates are editable",
+    "Ocean Rates table displays",
+    "Auction Fee Rules table displays brackets",
+    "Live Preview: calculate button works and shows visible/internal totals",
+    "Save Profile button works",
+    "Navigation: Calculator link appears in admin sidebar for master_admin",
+    "Backend APIs: Profile config, stats, routes, auction fees all working",
+    "Authentication and authorization working correctly",
+    "All CRUD operations for rates and auction rules functional"
+  ],
+  "test_report_links": ["/app/backend_test.py"],
+  "success_percentage": "backend: 100%, frontend: 100%",
+  "updated_files": ["/app/backend_test.py"],
+  "action_item_for_main_agent": "",
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "true"
+}

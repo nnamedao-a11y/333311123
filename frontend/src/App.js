@@ -36,6 +36,7 @@ import ParserLogs from './pages/ParserLogs';
 import ParserSettings from './pages/ParserSettings';
 import Vehicles from './pages/Vehicles';
 import VinSearch from './pages/VinSearch';
+import CalculatorAdmin from './pages/CalculatorAdmin';
 import Layout from './components/Layout';
 
 import './App.css';
@@ -173,6 +174,7 @@ function App() {
             <Route path="parser/settings" element={<ParserSettings />} />
             <Route path="vehicles" element={<Vehicles />} />
             <Route path="vin" element={<VinSearch />} />
+            <Route path="calculator" element={<CalculatorAdmin />} />
           </Route>
 
           {/* Legacy redirect: /login -> /admin/login */}
