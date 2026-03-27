@@ -46,6 +46,13 @@ CRM система для автобізнесу з:
 - [x] Auto-seed при старті модуля
 - [x] Hidden fee логіка (margin control)
 
+### P1 - Lead Conversion Flow (FIXED - 27.03.2026)
+- [x] POST /api/public/leads/quick - швидке створення lead
+- [x] POST /api/public/leads/from-quote - створення lead з quote
+- [x] GET /api/public/leads/status/:id - перевірка статусу lead
+- [x] Calculator UI на VIN Check page з калькулятором вартості
+- [x] Lead form modal на VIN Check page
+
 ### Calculator Features
 - Розрахунок повної вартості: car price + auction fee + insurance + shipping + customs + fees
 - Admin-configurable: всі ставки міняються через API
@@ -59,8 +66,13 @@ CRM система для автобізнесу з:
 - `POST /api/calculator/quote` - створення quote
 - `GET /api/calculator/quote/:id` - отримання quote
 - `GET /api/calculator/ports` - доступні порти та типи авто
+- `POST /api/public/leads/quick` - швидке створення lead
+- `POST /api/public/leads/from-quote` - lead з quote
+- `GET /api/public/leads/status/:id` - статус lead
 
 **Admin:**
+- `POST /api/auth/login` - авторизація
+- `GET /api/auth/me` - поточний користувач
 - `GET /api/calculator/config/profile` - активний профіль
 - `PATCH /api/calculator/config/profile` - оновити налаштування
 - `GET /api/calculator/config/routes/:profileCode` - route rates
@@ -101,9 +113,9 @@ CRM система для автобізнесу з:
 
 ## Prioritized Backlog
 
-### P1 - High Priority
-- [ ] Calculator UI на VIN page та каталозі
-- [ ] Lead Conversion Flow (VIN → quote → lead)
+### P1 - High Priority (COMPLETED)
+- [x] Calculator UI на VIN page та каталозі
+- [x] Lead Conversion Flow (VIN → quote → lead)
 - [ ] WebSocket для real-time оновлень таймерів
 
 ### P2 - Medium Priority
@@ -120,7 +132,13 @@ CRM система для автобізнесу з:
 ## Test Credentials
 - Admin: `admin@crm.com` / `admin123`
 
+## Recent Fixes (27.03.2026)
+1. Added JWT_SECRET to backend .env
+2. Fixed Lead validation - added class-validator decorators to DTOs
+3. Fixed Lead source enum - mapping to valid LeadSource values
+4. Fixed import paths in public-lead.controller.ts and lead.schema.ts
+
 ## Next Tasks
-1. Add Calculator to VIN Check page UI
-2. Implement Lead Conversion Flow
-3. Create Calculator Admin page
+1. Create Calculator Admin UI page
+2. Implement WebSocket for real-time auction timers
+3. Add Quote history view in CRM dashboard
