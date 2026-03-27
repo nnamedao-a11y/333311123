@@ -36,6 +36,7 @@ import { SourceRegistryModule } from './modules/source-registry/source-registry.
 import { SourceDiscoveryModule } from './modules/source-discovery/source-discovery.module';
 import { CompetitorParsingModule } from './modules/competitor-parsing/competitor-parsing.module';
 import { AuctionRankingModule } from './modules/auction-ranking/auction-ranking.module';
+import { CalculatorModule } from './modules/calculator/calculator.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { AuctionRankingModule } from './modules/auction-ranking/auction-ranking.
     SourceDiscoveryModule,
     CompetitorParsingModule,
     AuctionRankingModule,
+    CalculatorModule,
   ],
 })
 export class AppModule {}

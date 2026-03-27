@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-BIBI Cars CRM - Backend API Testing
-Tests auction ranking endpoints and admin authentication
+BIBI Cars CRM - Calculator Engine Backend API Testing
+Tests calculator endpoints for pricing calculations and quote management
 """
 
 import requests
@@ -9,7 +9,7 @@ import sys
 import json
 from datetime import datetime
 
-class BIBICarsAPITester:
+class BIBICalculatorAPITester:
     def __init__(self, base_url="https://code-resume-32.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
@@ -66,135 +66,282 @@ class BIBICarsAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
-    def test_health_check(self):
-        """Test health endpoint - skip if not available"""
+    def test_calculator_sedan_nj_calculation(self):
+        """Test calculation for sedan NJ $15,500 → total ~$22,699"""
         success, response = self.run_test(
-            "Health Check",
-            "GET",
-            "api/health",
-            200
-        )
-        if not success:
-            print("   ℹ️  Health endpoint not implemented - skipping")
-        return success
-
-    def test_auction_stats(self):
-        """Test auction ranking stats endpoint"""
-        return self.run_test(
-            "Auction Stats",
-            "GET", 
-            "api/auction-ranking/stats",
-            200
-        )
-
-    def test_hot_auctions(self):
-        """Test hot auctions endpoint"""
-        return self.run_test(
-            "Hot Auctions",
-            "GET",
-            "api/auction-ranking/hot?limit=8",
-            200
-        )
-
-    def test_ending_soon_auctions(self):
-        """Test ending soon auctions endpoint"""
-        return self.run_test(
-            "Ending Soon Auctions", 
-            "GET",
-            "api/auction-ranking/ending-soon?limit=8",
-            200
-        )
-
-    def test_upcoming_auctions(self):
-        """Test upcoming auctions endpoint"""
-        return self.run_test(
-            "Upcoming Auctions",
-            "GET", 
-            "api/auction-ranking/upcoming?limit=8",
-            200
-        )
-
-    def test_top_auctions(self):
-        """Test top auctions endpoint"""
-        return self.run_test(
-            "Top Auctions",
-            "GET",
-            "api/auction-ranking/top?limit=20",
-            200
-        )
-
-    def test_admin_login(self):
-        """Test admin login"""
-        success, response = self.run_test(
-            "Admin Login",
+            "Calculator - Sedan NJ $15,500",
             "POST",
-            "api/auth/login",
-            201,  # NestJS returns 201 for successful login
-            data={"email": "admin@crm.com", "password": "admin123"}
+            "api/calculator/calculate",
+            201,
+            data={
+                "price": 15500,
+                "port": "NJ", 
+                "vehicleType": "sedan",
+                "vin": "1HGBH41JXMN109186",
+                "lotNumber": "12345"
+            }
         )
         
-        if success and isinstance(response, dict) and 'access_token' in response:
-            self.token = response['access_token']
-            print(f"   ✅ Token received: {self.token[:20]}...")
-            return True
-        return False
+        if success and isinstance(response, dict):
+            visible_total = response.get('totals', {}).get('visible', 0)
+            print(f"   💰 Visible Total: ${visible_total}")
+            # Expected around $22,699 based on requirements
+            if 22000 <= visible_total <= 23500:
+                print(f"   ✅ Total within expected range (${visible_total})")
+                return True
+            else:
+                print(f"   ⚠️  Total ${visible_total} outside expected range $22,000-$23,500")
+        
+        return success
 
-    def test_admin_me(self):
-        """Test admin me endpoint (requires auth)"""
-        if not self.token:
-            print("❌ Skipping admin/me test - no token available")
-            return False
-            
-        return self.run_test(
-            "Admin Me (Auth Required)",
-            "GET",
-            "api/auth/me", 
-            200
-        )[0]
-
-    def test_vin_public_endpoint(self):
-        """Test public VIN check endpoint"""
-        # Test with a sample VIN
-        test_vin = "1HGBH41JXMN109186"
-        return self.run_test(
-            f"VIN Check Public ({test_vin})",
-            "GET",
-            f"api/public/vin/{test_vin}",
-            200  # Expecting 200 even if VIN not found (should return structured response)
+    def test_calculator_bigsuv_ca_calculation(self):
+        """Test calculation for bigSUV CA $42,000 → total ~$54,635"""
+        success, response = self.run_test(
+            "Calculator - BigSUV CA $42,000",
+            "POST", 
+            "api/calculator/calculate",
+            201,
+            data={
+                "price": 42000,
+                "port": "CA",
+                "vehicleType": "bigSUV", 
+                "vin": "5UXWX7C5XBA123456",
+                "lotNumber": "67890"
+            }
         )
+        
+        if success and isinstance(response, dict):
+            visible_total = response.get('totals', {}).get('visible', 0)
+            print(f"   💰 Visible Total: ${visible_total}")
+            # Expected around $54,635 based on requirements
+            if 53000 <= visible_total <= 56000:
+                print(f"   ✅ Total within expected range (${visible_total})")
+                return True
+            else:
+                print(f"   ⚠️  Total ${visible_total} outside expected range $53,000-$56,000")
+        
+        return success
+
+    def test_calculator_hidden_fee_under_5000(self):
+        """Test hidden fee calculation for price under $5,000 (should be $700)"""
+        success, response = self.run_test(
+            "Calculator - Hidden Fee Under $5,000",
+            "POST",
+            "api/calculator/calculate", 
+            201,
+            data={
+                "price": 3500,
+                "port": "NJ",
+                "vehicleType": "sedan"
+            }
+        )
+        
+        if success and isinstance(response, dict):
+            hidden_fee = response.get('hiddenBreakdown', {}).get('hiddenFee', 0)
+            print(f"   🔒 Hidden Fee: ${hidden_fee}")
+            if hidden_fee == 700:
+                print(f"   ✅ Hidden fee correct for under $5,000")
+                return True
+            else:
+                print(f"   ❌ Expected $700 hidden fee, got ${hidden_fee}")
+        
+        return success
+
+    def test_calculator_hidden_fee_over_5000(self):
+        """Test hidden fee calculation for price over $5,000 (should be $1,400)"""
+        success, response = self.run_test(
+            "Calculator - Hidden Fee Over $5,000",
+            "POST",
+            "api/calculator/calculate",
+            201,
+            data={
+                "price": 15500,
+                "port": "NJ", 
+                "vehicleType": "sedan"
+            }
+        )
+        
+        if success and isinstance(response, dict):
+            hidden_fee = response.get('hiddenBreakdown', {}).get('hiddenFee', 0)
+            print(f"   🔒 Hidden Fee: ${hidden_fee}")
+            if hidden_fee == 1400:
+                print(f"   ✅ Hidden fee correct for over $5,000")
+                return True
+            else:
+                print(f"   ❌ Expected $1,400 hidden fee, got ${hidden_fee}")
+        
+        return success
+
+    def test_calculator_auction_fee_brackets(self):
+        """Test auction fee brackets work correctly"""
+        test_cases = [
+            (500, 300, "Under $1,000"),
+            (2500, 450, "$1,000-$2,999"),
+            (4500, 600, "$3,000-$4,999"),
+            (6500, 750, "$5,000-$7,499"),
+            (15500, 1200, "$15,000-$24,999"),
+            (45000, 1500, "$25,000-$49,999")
+        ]
+        
+        all_passed = True
+        for price, expected_fee, bracket_desc in test_cases:
+            success, response = self.run_test(
+                f"Auction Fee Bracket - {bracket_desc}",
+                "POST",
+                "api/calculator/calculate",
+                201,
+                data={
+                    "price": price,
+                    "port": "NJ",
+                    "vehicleType": "sedan"
+                }
+            )
+            
+            if success and isinstance(response, dict):
+                auction_fee = response.get('breakdown', {}).get('auctionFee', 0)
+                print(f"   💸 Price: ${price} → Auction Fee: ${auction_fee}")
+                if auction_fee == expected_fee:
+                    print(f"   ✅ Correct auction fee for {bracket_desc}")
+                else:
+                    print(f"   ❌ Expected ${expected_fee}, got ${auction_fee}")
+                    all_passed = False
+            else:
+                all_passed = False
+        
+        return all_passed
+
+    def test_create_quote_with_vin(self):
+        """Test quote creation with VIN"""
+        success, response = self.run_test(
+            "Create Quote with VIN",
+            "POST",
+            "api/calculator/quote",
+            201,
+            data={
+                "price": 15500,
+                "port": "NJ",
+                "vehicleType": "sedan",
+                "vin": "1HGBH41JXMN109186",
+                "lotNumber": "12345",
+                "vehicleTitle": "2023 Honda Accord",
+                "notes": "Test quote creation"
+            }
+        )
+        
+        if success and isinstance(response, dict):
+            quote_info = response.get('quote', {})
+            quote_number = quote_info.get('quoteNumber', '')
+            print(f"   📋 Quote Number: {quote_number}")
+            if quote_number and quote_number.startswith('QT-'):
+                print(f"   ✅ Quote created successfully")
+                return True
+            else:
+                print(f"   ❌ Invalid quote number format")
+        
+        return success
+
+    def test_get_active_profile(self):
+        """Test GET /api/calculator/config/profile - returns active profile"""
+        success, response = self.run_test(
+            "Get Active Profile",
+            "GET",
+            "api/calculator/config/profile",
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            profile_code = response.get('code', '')
+            profile_name = response.get('name', '')
+            print(f"   📊 Profile: {profile_code} - {profile_name}")
+            if profile_code == 'default-bg':
+                print(f"   ✅ Default profile active")
+                return True
+            else:
+                print(f"   ⚠️  Unexpected profile code: {profile_code}")
+        
+        return success
+
+    def test_get_auction_fee_rules(self):
+        """Test GET /api/calculator/config/auction-fees/default-bg - returns bracket rules"""
+        success, response = self.run_test(
+            "Get Auction Fee Rules",
+            "GET", 
+            "api/calculator/config/auction-fees/default-bg",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   📋 Found {len(response)} auction fee rules")
+            # Check if we have the expected brackets
+            if len(response) >= 8:  # Should have 9 brackets based on seed data
+                print(f"   ✅ Auction fee brackets loaded")
+                return True
+            else:
+                print(f"   ⚠️  Expected at least 8 brackets, got {len(response)}")
+        
+        return success
+
+    def test_get_ports_and_vehicle_types(self):
+        """Test GET /api/calculator/ports - returns ports and vehicleTypes"""
+        success, response = self.run_test(
+            "Get Ports and Vehicle Types",
+            "GET",
+            "api/calculator/ports", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            ports = response.get('ports', [])
+            vehicle_types = response.get('vehicleTypes', [])
+            print(f"   🚢 Ports: {len(ports)}, Vehicle Types: {len(vehicle_types)}")
+            
+            # Check expected ports
+            port_codes = [p.get('code') for p in ports]
+            expected_ports = ['NJ', 'GA', 'TX', 'CA']
+            if all(code in port_codes for code in expected_ports):
+                print(f"   ✅ All expected ports available")
+                return True
+            else:
+                print(f"   ⚠️  Missing expected ports. Got: {port_codes}")
+        
+        return success
 
 def main():
-    print("🚗 BIBI Cars CRM - Backend API Testing")
-    print("=" * 50)
+    print("🚗 BIBI Cars CRM - Calculator Engine Backend API Testing")
+    print("=" * 60)
     
-    tester = BIBICarsAPITester()
+    tester = BIBICalculatorAPITester()
     
-    # Test public endpoints first
-    print("\n📊 Testing Public Auction Endpoints...")
-    tester.test_health_check()
-    tester.test_auction_stats()
-    tester.test_hot_auctions()
-    tester.test_ending_soon_auctions()
-    tester.test_upcoming_auctions()
-    tester.test_top_auctions()
+    # Test calculator configuration endpoints
+    print("\n⚙️  Testing Calculator Configuration...")
+    tester.test_get_active_profile()
+    tester.test_get_auction_fee_rules()
+    tester.test_get_ports_and_vehicle_types()
     
-    # Test VIN endpoint
-    print("\n🔍 Testing VIN Check Endpoint...")
-    tester.test_vin_public_endpoint()
+    # Test core calculation functionality
+    print("\n🧮 Testing Core Calculations...")
+    tester.test_calculator_sedan_nj_calculation()
+    tester.test_calculator_bigsuv_ca_calculation()
     
-    # Test admin authentication
-    print("\n🔐 Testing Admin Authentication...")
-    if tester.test_admin_login():
-        tester.test_admin_me()
-    else:
-        print("❌ Admin login failed, skipping authenticated tests")
+    # Test hidden fee logic
+    print("\n🔒 Testing Hidden Fee Logic...")
+    tester.test_calculator_hidden_fee_under_5000()
+    tester.test_calculator_hidden_fee_over_5000()
+    
+    # Test auction fee brackets
+    print("\n💸 Testing Auction Fee Brackets...")
+    tester.test_calculator_auction_fee_brackets()
+    
+    # Test quote creation
+    print("\n📋 Testing Quote Creation...")
+    tester.test_create_quote_with_vin()
     
     # Print final results
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed!")
+        print("🎉 All calculator tests passed!")
         return 0
     else:
         print(f"⚠️  {tester.tests_run - tester.tests_passed} tests failed")
