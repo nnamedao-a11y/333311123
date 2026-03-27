@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { LeadStatus, LeadSource, ContactStatus } from '../../shared/enums';
-import { generateId } from '../../shared/utils';
+import { LeadStatus, LeadSource, ContactStatus } from '../../shared/enums/index';
+import { generateId } from '../../shared/utils/index';
 
 @Schema({ timestamps: true })
 export class Lead extends Document {

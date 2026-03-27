@@ -9,29 +9,68 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Lead } from './lead.schema';
 import { Quote, QuoteDocument } from '../calculator/schemas/quote.schema';
-import { generateId } from '../../shared/utils';
-import { LeadStatus, ContactStatus } from '../../shared/enums';
+import { generateId } from '../../shared/utils/index';
+import { LeadStatus, ContactStatus, LeadSource } from '../../shared/enums/index';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 // DTO for creating lead from quote
 class CreateLeadFromQuoteDto {
+  @IsString()
   quoteId: string;
+
+  @IsString()
   firstName: string;
+
+  @IsString()
+  @IsOptional()
   lastName?: string;
+
+  @IsString()
   phone: string;
+
+  @IsString()
+  @IsOptional()
   email?: string;
+
+  @IsString()
+  @IsOptional()
   comment?: string;
 }
 
 // DTO for creating lead directly (quick form)
 class CreatePublicLeadDto {
+  @IsString()
+  @IsOptional()
   vin?: string;
+
+  @IsString()
   firstName: string;
+
+  @IsString()
+  @IsOptional()
   lastName?: string;
+
+  @IsString()
   phone: string;
+
+  @IsString()
+  @IsOptional()
   email?: string;
+
+  @IsString()
+  @IsOptional()
   comment?: string;
+
+  @IsString()
+  @IsOptional()
   source?: string;
+
+  @IsNumber()
+  @IsOptional()
   price?: number;
+
+  @IsString()
+  @IsOptional()
   vehicleTitle?: string;
 }
 
@@ -72,7 +111,7 @@ export class PublicLeadController {
       phone: dto.phone,
       email: dto.email || '',
       vin: quote.vin,
-      source: 'vin_calculator',
+      source: LeadSource.WEBSITE,
       status: LeadStatus.NEW,
       contactStatus: ContactStatus.NEW_REQUEST,
       price: quote.visibleTotal,
@@ -85,6 +124,7 @@ export class PublicLeadController {
         breakdown: quote.breakdown,
         comment: dto.comment || '',
         calculatorInput: quote.input,
+        originalSource: 'vin_calculator',
       },
       notes: dto.comment ? `Коментар клієнта: ${dto.comment}` : '',
     });
@@ -124,6 +164,12 @@ export class PublicLeadController {
   async createQuickLead(@Body() dto: CreatePublicLeadDto) {
     this.logger.log(`[Lead] Creating quick lead: ${dto.firstName} ${dto.phone}`);
 
+    // Map source string to valid enum or use default
+    let source = LeadSource.WEBSITE;
+    if (dto.source === 'vin_page_quick') {
+      source = LeadSource.WEBSITE;
+    }
+
     const lead = await this.leadModel.create({
       id: generateId(),
       firstName: dto.firstName,
@@ -131,13 +177,14 @@ export class PublicLeadController {
       phone: dto.phone,
       email: dto.email || '',
       vin: dto.vin || '',
-      source: dto.source || 'website_form',
+      source: source,
       status: LeadStatus.NEW,
       contactStatus: ContactStatus.NEW_REQUEST,
       price: dto.price || 0,
       metadata: {
         vehicleTitle: dto.vehicleTitle || '',
         comment: dto.comment || '',
+        originalSource: dto.source,
       },
       notes: dto.comment ? `Коментар клієнта: ${dto.comment}` : '',
     });
