@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../App';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash } from '@phosphor-icons/react';
+import { Plus, Pencil, Trash, Eye } from '@phosphor-icons/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { motion } from 'framer-motion';
@@ -10,6 +11,7 @@ import { motion } from 'framer-motion';
 const CUSTOMER_TYPES = ['individual', 'company'];
 
 const Customers = () => {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -98,17 +100,25 @@ const Customers = () => {
             ) : customers.length === 0 ? (<tr><td colSpan={7} className="text-center py-12 text-[#71717A]">Немає клієнтів</td></tr>
             ) : customers.map(customer => (
               <tr key={customer.id} data-testid={`customer-row-${customer.id}`}>
-                <td className="font-medium text-[#18181B]">{customer.firstName} {customer.lastName}</td>
+                <td className="font-medium text-[#18181B]">
+                  <button 
+                    onClick={() => navigate(`/admin/customers/${customer.id}/360`)}
+                    className="hover:text-[#4F46E5] transition-colors"
+                  >
+                    {customer.firstName} {customer.lastName}
+                  </button>
+                </td>
                 <td>{customer.email}</td>
                 <td>{customer.phone || '—'}</td>
                 <td><span className="text-xs text-[#71717A]">{typeLabels[customer.type]}</span></td>
                 <td>{customer.company || '—'}</td>
                 <td>
                   <span className="font-semibold text-[#18181B]">{customer.totalDeals || 0}</span>
-                  <span className="text-xs text-[#71717A] ml-1">(${customer.totalValue?.toLocaleString() || 0})</span>
+                  <span className="text-xs text-[#71717A] ml-1">(${(customer.totalRevenue || customer.totalValue || 0).toLocaleString()})</span>
                 </td>
                 <td>
                   <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => navigate(`/admin/customers/${customer.id}/360`)} className="p-2.5 hover:bg-[#E0E7FF] rounded-lg" data-testid={`view-customer-${customer.id}`}><Eye size={16} className="text-[#4F46E5]" /></button>
                     <button onClick={() => openEditModal(customer)} className="p-2.5 hover:bg-[#F4F4F5] rounded-lg" data-testid={`edit-customer-${customer.id}`}><Pencil size={16} className="text-[#71717A]" /></button>
                     <button onClick={() => handleDelete(customer.id)} className="p-2.5 hover:bg-[#FEE2E2] rounded-lg" data-testid={`delete-customer-${customer.id}`}><Trash size={16} className="text-[#DC2626]" /></button>
                   </div>

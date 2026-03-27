@@ -38,6 +38,7 @@ import Vehicles from './pages/Vehicles';
 import VinSearch from './pages/VinSearch';
 import CalculatorAdmin from './pages/CalculatorAdmin';
 import QuoteAnalytics from './pages/QuoteAnalytics';
+import Customer360 from './pages/Customer360';
 import Layout from './components/Layout';
 
 import './App.css';
@@ -162,6 +163,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="leads" element={<Leads />} />
             <Route path="customers" element={<Customers />} />
+            <Route path="customers/:id/360" element={<Customer360 />} />
             <Route path="deals" element={<Deals />} />
             <Route path="deposits" element={<Deposits />} />
             <Route path="tasks" element={<Tasks />} />
