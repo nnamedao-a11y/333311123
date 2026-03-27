@@ -386,6 +386,18 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 20px;
 }
 
+/* Clean section title - no background box around icon */
+.section-title-clean {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #18181B;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
 .section-icon {
   width: 36px;
   height: 36px;

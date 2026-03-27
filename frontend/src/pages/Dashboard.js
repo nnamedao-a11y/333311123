@@ -3,15 +3,31 @@ import axios from 'axios';
 import { API_URL } from '../App';
 import { motion } from 'framer-motion';
 import { 
-  Users, 
+  UsersThree, 
   Warning,
   Wallet, 
   Clock,
   Phone,
   FileText,
-  Gauge,
+  ChartPie,
   Heartbeat,
-  Lightning
+  Lightning,
+  UserCircle,
+  ClipboardText,
+  CurrencyCircleDollar,
+  ShieldCheck,
+  ArrowsClockwise,
+  Pulse,
+  Users,
+  CheckCircle,
+  XCircle,
+  HourglassMedium,
+  ChatCircleDots,
+  EnvelopeSimple,
+  PhoneCall,
+  UserPlus,
+  TrendUp,
+  Briefcase
 } from '@phosphor-icons/react';
 
 const Dashboard = () => {
@@ -87,49 +103,43 @@ const Dashboard = () => {
       {/* KPI Summary Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-8" data-testid="kpi-summary-row">
         <KpiCard 
-          icon={Users} 
+          icon={UserPlus} 
           label="Нові ліди" 
           value={leads.newCount} 
-          iconBg="#EEF2FF"
-          iconColor="#4F46E5"
+          color="#4F46E5"
         />
         <KpiCard 
-          icon={Warning} 
+          icon={HourglassMedium} 
           label="Прострочені" 
           value={sla.overdueLeads} 
-          iconBg="#FEE2E2"
-          iconColor="#DC2626"
+          color="#DC2626"
           alert={sla.overdueLeads > 0}
         />
         <KpiCard 
-          icon={Wallet} 
+          icon={CurrencyCircleDollar} 
           label="Pending депозити" 
           value={deposits.pendingDeposits} 
-          iconBg="#EDE9FE"
-          iconColor="#7C3AED"
+          color="#7C3AED"
         />
         <KpiCard 
-          icon={FileText} 
+          icon={ShieldCheck} 
           label="На верифікацію" 
           value={documents.pendingVerification} 
-          iconBg="#FEF3C7"
-          iconColor="#D97706"
+          color="#D97706"
           alert={documents.pendingVerification > 5}
         />
         <KpiCard 
-          icon={Users} 
+          icon={UsersThree} 
           label="Перевантажені" 
           value={workload.overloadedManagers} 
-          iconBg={workload.overloadedManagers > 0 ? "#FEE2E2" : "#D1FAE5"}
-          iconColor={workload.overloadedManagers > 0 ? "#DC2626" : "#059669"}
+          color={workload.overloadedManagers > 0 ? "#DC2626" : "#059669"}
           alert={workload.overloadedManagers > 0}
         />
         <KpiCard 
           icon={Lightning} 
           label="Failed Jobs" 
           value={system.failedJobs} 
-          iconBg={system.failedJobs > 0 ? "#FEE2E2" : "#D1FAE5"}
-          iconColor={system.failedJobs > 0 ? "#DC2626" : "#059669"}
+          color={system.failedJobs > 0 ? "#DC2626" : "#059669"}
         />
       </div>
 
@@ -137,52 +147,46 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
         {/* SLA Control */}
         <div className="section-card" data-testid="sla-control">
-          <div className="section-title">
-            <div className="section-icon" style={{ background: '#FEE2E2' }}>
-              <Clock size={18} weight="bold" style={{ color: '#DC2626' }} />
-            </div>
-            SLA Control
+          <div className="section-title-clean">
+            <Clock size={22} weight="duotone" className="text-[#DC2626]" />
+            <span>SLA Control</span>
           </div>
           <div>
-            <MetricRow label="Прострочені ліди" value={sla.overdueLeads} alert={sla.overdueLeads > 0} />
-            <MetricRow label="Прострочені задачі" value={sla.overdueTasks} alert={sla.overdueTasks > 0} />
-            <MetricRow label="Прострочені callback" value={sla.overdueCallbacks} alert={sla.overdueCallbacks > 0} />
-            <MetricRow label="Avg First Response" value={`${sla.avgFirstResponseMinutes} хв`} alert={sla.avgFirstResponseMinutes > 30} />
-            <MetricRow label="Missed SLA Rate" value={`${sla.missedSlaRate}%`} alert={sla.missedSlaRate > 15} />
+            <MetricRow icon={HourglassMedium} label="Прострочені ліди" value={sla.overdueLeads} alert={sla.overdueLeads > 0} />
+            <MetricRow icon={ClipboardText} label="Прострочені задачі" value={sla.overdueTasks} alert={sla.overdueTasks > 0} />
+            <MetricRow icon={PhoneCall} label="Прострочені callback" value={sla.overdueCallbacks} alert={sla.overdueCallbacks > 0} />
+            <MetricRow icon={TrendUp} label="Avg First Response" value={`${sla.avgFirstResponseMinutes} хв`} alert={sla.avgFirstResponseMinutes > 30} />
+            <MetricRow icon={ChartPie} label="Missed SLA Rate" value={`${sla.missedSlaRate}%`} alert={sla.missedSlaRate > 15} />
           </div>
         </div>
 
         {/* Lead Flow */}
         <div className="section-card" data-testid="lead-flow">
-          <div className="section-title">
-            <div className="section-icon" style={{ background: '#EEF2FF' }}>
-              <Users size={18} weight="bold" style={{ color: '#4F46E5' }} />
-            </div>
-            Lead Flow
+          <div className="section-title-clean">
+            <Users size={22} weight="duotone" className="text-[#4F46E5]" />
+            <span>Lead Flow</span>
           </div>
           <div>
-            <MetricRow label="Нові" value={leads.newCount} color="#4F46E5" />
-            <MetricRow label="В роботі" value={leads.inProgressCount} color="#D97706" />
-            <MetricRow label="Конвертовані" value={leads.convertedCount} color="#059669" />
-            <MetricRow label="Втрачені" value={leads.lostCount} color="#DC2626" />
-            <MetricRow label="Без менеджера" value={leads.unassignedCount} alert={leads.unassignedCount > 0} />
+            <MetricRow icon={UserPlus} label="Нові" value={leads.newCount} color="#4F46E5" />
+            <MetricRow icon={ArrowsClockwise} label="В роботі" value={leads.inProgressCount} color="#D97706" />
+            <MetricRow icon={CheckCircle} label="Конвертовані" value={leads.convertedCount} color="#059669" />
+            <MetricRow icon={XCircle} label="Втрачені" value={leads.lostCount} color="#DC2626" />
+            <MetricRow icon={UserCircle} label="Без менеджера" value={leads.unassignedCount} alert={leads.unassignedCount > 0} />
           </div>
         </div>
 
         {/* Callback Control */}
         <div className="section-card" data-testid="callback-control">
-          <div className="section-title">
-            <div className="section-icon" style={{ background: '#EDE9FE' }}>
-              <Phone size={18} weight="bold" style={{ color: '#7C3AED' }} />
-            </div>
-            Callback Control
+          <div className="section-title-clean">
+            <Phone size={22} weight="duotone" className="text-[#7C3AED]" />
+            <span>Callback Control</span>
           </div>
           <div>
-            <MetricRow label="Missed Calls" value={callbacks.missedCalls} alert={callbacks.missedCalls > 0} />
-            <MetricRow label="No Answer" value={callbacks.noAnswerLeads} alert={callbacks.noAnswerLeads > 3} />
-            <MetricRow label="Follow-ups due" value={callbacks.followUpsDue} alert={callbacks.followUpsDue > 0} />
-            <MetricRow label="Callback заплановано" value={callbacks.callbacksScheduled} />
-            <MetricRow label="SMS відправлено" value={callbacks.smsTriggered} color="#4F46E5" />
+            <MetricRow icon={PhoneCall} label="Missed Calls" value={callbacks.missedCalls} alert={callbacks.missedCalls > 0} />
+            <MetricRow icon={Phone} label="No Answer" value={callbacks.noAnswerLeads} alert={callbacks.noAnswerLeads > 3} />
+            <MetricRow icon={Clock} label="Follow-ups due" value={callbacks.followUpsDue} alert={callbacks.followUpsDue > 0} />
+            <MetricRow icon={ChatCircleDots} label="Callback заплановано" value={callbacks.callbacksScheduled} />
+            <MetricRow icon={EnvelopeSimple} label="SMS відправлено" value={callbacks.smsTriggered} color="#4F46E5" />
           </div>
         </div>
       </div>
@@ -191,11 +195,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Workload Heatmap */}
         <div className="section-card" data-testid="workload-heatmap">
-          <div className="section-title">
-            <div className="section-icon" style={{ background: '#FEF3C7' }}>
-              <Gauge size={18} weight="bold" style={{ color: '#D97706' }} />
-            </div>
-            Workload
+          <div className="section-title-clean">
+            <Briefcase size={22} weight="duotone" className="text-[#D97706]" />
+            <span>Workload</span>
             <span className="text-[#71717A] font-normal text-sm ml-1">({workload.totalManagers})</span>
           </div>
           <div className="space-y-2 max-h-52 overflow-y-auto">
@@ -225,27 +227,25 @@ const Dashboard = () => {
 
         {/* Deposits & Documents */}
         <div className="section-card" data-testid="deposits-docs">
-          <div className="section-title">
-            <div className="section-icon" style={{ background: '#D1FAE5' }}>
-              <Wallet size={18} weight="bold" style={{ color: '#059669' }} />
-            </div>
-            Депозити & Документи
+          <div className="section-title-clean">
+            <Wallet size={22} weight="duotone" className="text-[#059669]" />
+            <span>Депозити & Документи</span>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-[#71717A] mb-3">Депозити</p>
               <div className="space-y-1">
-                <MetricRow label="Pending" value={deposits.pendingDeposits} />
-                <MetricRow label="Без proof" value={deposits.depositsWithoutProof} alert={deposits.depositsWithoutProof > 0} />
-                <MetricRow label="Верифіковано" value={deposits.verifiedToday} color="#059669" />
+                <MetricRowSimple label="Pending" value={deposits.pendingDeposits} />
+                <MetricRowSimple label="Без proof" value={deposits.depositsWithoutProof} alert={deposits.depositsWithoutProof > 0} />
+                <MetricRowSimple label="Верифіковано" value={deposits.verifiedToday} color="#059669" />
               </div>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-[#71717A] mb-3">Документи</p>
               <div className="space-y-1">
-                <MetricRow label="На верифікацію" value={documents.pendingVerification} alert={documents.pendingVerification > 3} />
-                <MetricRow label="Відхилено" value={documents.rejectedCount} color="#DC2626" />
-                <MetricRow label="Завантажено" value={documents.uploadedToday} color="#4F46E5" />
+                <MetricRowSimple label="На верифікацію" value={documents.pendingVerification} alert={documents.pendingVerification > 3} />
+                <MetricRowSimple label="Відхилено" value={documents.rejectedCount} color="#DC2626" />
+                <MetricRowSimple label="Завантажено" value={documents.uploadedToday} color="#4F46E5" />
               </div>
             </div>
           </div>
@@ -253,19 +253,17 @@ const Dashboard = () => {
 
         {/* Routing & System Health */}
         <div className="section-card" data-testid="routing-health">
-          <div className="section-title">
-            <div className="section-icon" style={{ background: '#D1FAE5' }}>
-              <Heartbeat size={18} weight="bold" style={{ color: '#059669' }} />
-            </div>
-            Routing & System
+          <div className="section-title-clean">
+            <Pulse size={22} weight="duotone" className="text-[#059669]" />
+            <span>Routing & System</span>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-[#71717A] mb-3">Routing</p>
               <div className="space-y-1">
-                <MetricRow label="Fallback" value={routing.fallbackAssignments} alert={routing.fallbackAssignments > 5} />
-                <MetricRow label="Reassign Rate" value={`${routing.reassignmentRate}%`} />
-                <MetricRow label="Без менеджера" value={routing.unassignedLeads} alert={routing.unassignedLeads > 0} />
+                <MetricRowSimple label="Fallback" value={routing.fallbackAssignments} alert={routing.fallbackAssignments > 5} />
+                <MetricRowSimple label="Reassign Rate" value={`${routing.reassignmentRate}%`} />
+                <MetricRowSimple label="Без менеджера" value={routing.unassignedLeads} alert={routing.unassignedLeads > 0} />
               </div>
             </div>
             <div>
@@ -275,8 +273,8 @@ const Dashboard = () => {
                   <span className="metric-label">Status</span>
                   <SystemStatusBadge status={system.systemStatus} />
                 </div>
-                <MetricRow label="Queue" value={system.queueBacklog} />
-                <MetricRow label="Помилки" value={system.failedJobs} alert={system.failedJobs > 0} />
+                <MetricRowSimple label="Queue" value={system.queueBacklog} />
+                <MetricRowSimple label="Помилки" value={system.failedJobs} alert={system.failedJobs > 0} />
               </div>
             </div>
           </div>
@@ -286,20 +284,31 @@ const Dashboard = () => {
   );
 };
 
-// Helper Components
-const KpiCard = ({ icon: Icon, label, value, iconBg, iconColor, alert }) => (
+// Helper Components - Clean style without background blocks
+
+const KpiCard = ({ icon: Icon, label, value, color, alert }) => (
   <div className={`kpi-card ${alert ? 'border-[#DC2626]' : ''}`} data-testid={`kpi-${label.toLowerCase().replace(/\s/g, '-')}`}>
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: iconBg }}>
-        <Icon size={20} weight="bold" style={{ color: iconColor }} />
-      </div>
+    <div className="mb-4">
+      <Icon size={28} weight="duotone" style={{ color }} />
     </div>
     <div className={`kpi-value ${alert ? 'text-[#DC2626]' : ''}`}>{value}</div>
     <div className="kpi-label">{label}</div>
   </div>
 );
 
-const MetricRow = ({ label, value, color, alert }) => (
+const MetricRow = ({ icon: Icon, label, value, color, alert }) => (
+  <div className="metric-row">
+    <div className="flex items-center gap-2">
+      {Icon && <Icon size={16} weight="duotone" className="text-[#A1A1AA]" />}
+      <span className="metric-label">{label}</span>
+    </div>
+    <span className={`metric-value ${alert ? 'alert' : ''}`} style={{ color: !alert && color ? color : undefined }}>
+      {value}
+    </span>
+  </div>
+);
+
+const MetricRowSimple = ({ label, value, color, alert }) => (
   <div className="metric-row">
     <span className="metric-label">{label}</span>
     <span className={`metric-value ${alert ? 'alert' : ''}`} style={{ color: !alert && color ? color : undefined }}>
@@ -332,9 +341,9 @@ const getWorkloadBg = (status) => {
 
 const SystemStatusBadge = ({ status }) => {
   const configs = {
-    healthy: { bg: '#D1FAE5', color: '#059669', label: 'Healthy' },
-    warning: { bg: '#FEF3C7', color: '#D97706', label: 'Warning' },
-    critical: { bg: '#FEE2E2', color: '#DC2626', label: 'Critical' },
+    healthy: { bg: '#D1FAE5', color: '#059669', label: 'HEALTHY' },
+    warning: { bg: '#FEF3C7', color: '#D97706', label: 'WARNING' },
+    critical: { bg: '#FEE2E2', color: '#DC2626', label: 'CRITICAL' },
   };
   const config = configs[status] || configs.healthy;
   return (
