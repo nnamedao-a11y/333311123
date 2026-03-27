@@ -31,22 +31,22 @@ const Layout = () => {
 
   // Base nav items for all users
   const baseNavItems = [
-    { path: '/', icon: House, label: 'Дашборд' },
-    { path: '/leads', icon: Users, label: 'Ліди' },
-    { path: '/customers', icon: UserCircle, label: 'Клієнти' },
-    { path: '/deals', icon: Handshake, label: 'Угоди' },
-    { path: '/deposits', icon: Wallet, label: 'Депозити' },
-    { path: '/tasks', icon: CheckSquare, label: 'Завдання' },
-    { path: '/documents', icon: FileText, label: 'Документи' },
-    { path: '/staff', icon: UsersThree, label: 'Команда' },
-    { path: '/settings', icon: Gear, label: 'Налаштування' },
+    { path: '/admin', icon: House, label: 'Дашборд' },
+    { path: '/admin/leads', icon: Users, label: 'Ліди' },
+    { path: '/admin/customers', icon: UserCircle, label: 'Клієнти' },
+    { path: '/admin/deals', icon: Handshake, label: 'Угоди' },
+    { path: '/admin/deposits', icon: Wallet, label: 'Депозити' },
+    { path: '/admin/tasks', icon: CheckSquare, label: 'Завдання' },
+    { path: '/admin/documents', icon: FileText, label: 'Документи' },
+    { path: '/admin/staff', icon: UsersThree, label: 'Команда' },
+    { path: '/admin/settings', icon: Gear, label: 'Налаштування' },
   ];
 
   // Add parser control for master_admin and moderator
-  const parserNavItem = { path: '/parser', icon: Database, label: 'Парсер' };
-  const vehiclesNavItem = { path: '/vehicles', icon: Car, label: 'Авто' };
-  const vinSearchNavItem = { path: '/vin', icon: MagnifyingGlass, label: 'VIN Пошук' };
-  const calculatorNavItem = { path: '/calculator', icon: Calculator, label: 'Калькулятор' };
+  const parserNavItem = { path: '/admin/parser', icon: Database, label: 'Парсер' };
+  const vehiclesNavItem = { path: '/admin/vehicles', icon: Car, label: 'Авто' };
+  const vinSearchNavItem = { path: '/admin/vin', icon: MagnifyingGlass, label: 'VIN Пошук' };
+  const calculatorNavItem = { path: '/admin/calculator', icon: Calculator, label: 'Калькулятор' };
   
   // Add extra items for master_admin only
   const navItems = user?.role === 'master_admin' 
@@ -82,13 +82,13 @@ const Layout = () => {
             <NavLink
               key={path}
               to={path}
-              end={path === '/'}
+              end={path === '/admin'}
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? 'active' : ''}`
               }
               data-testid={`nav-${label.toLowerCase()}`}
             >
-              <Icon size={20} weight={path === '/' ? 'fill' : 'regular'} />
+              <Icon size={20} weight={path === '/admin' ? 'fill' : 'regular'} />
               <span>{label}</span>
             </NavLink>
           ))}

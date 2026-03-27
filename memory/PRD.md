@@ -1,126 +1,129 @@
 # BIBI Cars CRM - VIN Intelligence Platform
 
-## Original Problem Statement
-CRM система для автобізнесу з повним Revenue Pipeline:
-VIN → Calculator → Quote → Lead → Deal → $
+## Project Summary
+Full-stack CRM system for auto business with VIN Intelligence, Calculator Engine, Quote Management, and Manager Price Override system.
 
 ## Architecture
+- **Backend**: NestJS (TypeScript) + FastAPI proxy
 - **Frontend**: React.js + Tailwind CSS
-- **Backend**: NestJS (TypeScript) via FastAPI proxy
 - **Database**: MongoDB
-- **Auth**: JWT-based
+- **Auth**: JWT-based authentication
 
-## What's Implemented
+## Core Features Implemented
 
-### P0 - Core Features (DONE)
-- VIN Intelligence Engine - multi-source aggregation
-- Source Registry Module - data source management
-- Auto-optimization engine - weight updates
-- Auction Ranking Engine
+### VIN Intelligence Engine ✅
+- Multi-source VIN lookup (Copart, IAAI)
+- Vehicle data aggregation
+- Price and history tracking
 
-### P1 - UI Layer (DONE)
-- Public Pages: Home, Vehicles, VIN Check
-- Admin CRM: Dashboard, Leads, Customers, Deals, etc.
-- Calculator Admin UI
+### Calculator Engine ✅
+- Dynamic pricing based on:
+  - Car price
+  - Port of origin
+  - Vehicle type
+  - Destination country
+- Configurable fees: auction, insurance, customs, shipping, company fee
+- Hidden fee (margin control) system
 
-### 🔥 MONETIZATION FLOW (DONE)
-```
-VIN Search → Calculator → Quote Snapshot → Lead → CRM
-```
+### Scenario Pricing System ✅
+- Three pricing scenarios:
+  - Minimum: -5% from visible total
+  - Recommended: base visible price
+  - Aggressive: +10% from visible total
+- Quote creation with scenario selection
 
-### 🔥 CALCULATOR ADMIN UI (DONE)
-- Profile Settings (all fees editable)
-- Hidden Fees (Margin Control)
-- Rate Tables (USA Inland, Ocean, EU Delivery)
-- Auction Fee Rules
-- Live Preview with visible/internal totals
+### Manager Price Override + Audit ✅ (NEW)
+- Manager can override final price with reason
+- Full audit trail recorded
+- Impact on margin calculated
+- Analytics by manager:
+  - Total overrides
+  - Average price change %
+  - Margin impact
 
-### 🔥 QUOTE HISTORY SYSTEM (DONE - 27.03.2026)
+### Quote History System ✅
+- All calculations saved as quotes
+- Linked to leads and customers
+- Scenario selection per quote
+- Audit history per quote
 
-**Quote Schema Extended:**
-```typescript
-scenarios: {
-  minimum: number;      // -5%
-  recommended: number;  // base
-  aggressive: number;   // +10%
-}
-selectedScenario: 'minimum' | 'recommended' | 'aggressive';
-finalPrice: number;
-createdFrom: 'vin' | 'manual' | 'admin' | 'manager';
-convertedToLead: boolean;
-history: Array<{
-  action: string;
-  timestamp: Date;
-  oldValue?: any;
-  newValue?: any;
-}>
-```
+### CRM Features ✅
+- Leads management with VIN linking
+- Customers database
+- Deals tracking
+- Task management
+- Staff/team management
+- Documents
 
-**Features:**
-- [x] 3 Scenario Pricing: Minimum (-5%), Recommended, Aggressive (+10%)
-- [x] Quote history per lead/VIN
-- [x] Scenario selection in VIN Check page
-- [x] Scenario change API with audit trail
-- [x] Quote History button in CRM Leads
-- [x] Quote History modal with full breakdown
-- [x] History tracking (audit trail)
+### Admin Features ✅
+- Calculator configuration
+- Route rates management
+- Auction fee rules
+- Pricing profiles
 
-### APIs
+## User Personas
+1. **Master Admin**: Full access, calculator config, analytics
+2. **Manager**: Quote creation, price override, lead management
+3. **Sales**: Lead follow-up, quote generation
 
-**Public:**
-- `POST /api/calculator/calculate` - calculate
-- `POST /api/calculator/quote` - create with scenarios
-- `GET /api/calculator/quote/:id` - get quote
-- `PATCH /api/calculator/quote/:id/scenario` - change scenario
-- `GET /api/calculator/quotes?vin=&leadId=` - history
+## API Endpoints (Key)
 
-**Admin:**
-- Full Calculator Admin CRUD
-- Quote management
-- Statistics
+### Calculator
+- `POST /api/calculator/calculate` - Calculate delivery cost
+- `POST /api/calculator/quote` - Create quote with scenarios
+- `PATCH /api/calculator/quote/:id/scenario` - Set scenario
+- `PATCH /api/calculator/quote/:id/override` - Manager price override
+- `GET /api/calculator/quote/:id/audit` - Get audit history
+- `GET /api/calculator/admin/manager-analytics` - Override analytics
 
-## Scenario Pricing System
+### Leads
+- `POST /api/public/leads/from-quote` - Create lead from quote
+- `POST /api/public/leads/quick` - Quick lead creation
 
-**Example (car $20,000):**
-```
-Minimum:     $26,684 (-5%)  → High conversion
-Recommended: $28,089        → Balanced
-Aggressive:  $30,897 (+10%) → Max profit
-```
+## Test Credentials
+- Admin: admin@crm.com / admin123
 
-**Business Value:**
-- Manager flexibility in negotiations
-- Conversion analytics per scenario
-- Profit optimization
-- Audit trail for all changes
+## Test VINs (seeded)
+- WBA3B3C50EF123456: 2014 BMW 328i ($8,500)
+- WVWZZZ3CZWE123789: 2019 VW Tiguan ($15,500)
+- JN1TANT31U0000001: 2020 Nissan Rogue ($18,000)
+- 1HGCV1F34KA000001: 2019 Honda Accord ($12,500)
+- 5YJSA1E29KF000001: 2019 Tesla Model S ($35,000)
+
+## What's Been Implemented
+- [x] Calculator Engine with configurable fees
+- [x] Scenario Pricing (min/rec/max)
+- [x] Quote History System
+- [x] Manager Price Override with Audit
+- [x] VIN Intelligence integration
+- [x] Lead conversion from quotes
+- [x] CRM Admin panel with navigation
+- [x] Test data seeding
 
 ## Prioritized Backlog
 
-### COMPLETED ✅
-- [x] VIN Intelligence Engine
-- [x] Calculator Engine
-- [x] Monetization Flow
-- [x] Calculator Admin UI
-- [x] Quote History System
-- [x] Scenario Pricing
+### P0 (Critical)
+- ✅ Manager Price Override + Audit
 
-### P2 - Next Steps
-- [ ] Manager Price Override with Audit
+### P1 (High)
 - [ ] Pricing Profiles (A/B testing)
 - [ ] WebSocket for real-time timers
 - [ ] Quote analytics dashboard
 
-### P3 - Future
-- [ ] Quote versioning
-- [ ] SEO VIN pages
-- [ ] Email notifications
+### P2 (Medium)
+- [ ] SMS/Email notifications
+- [ ] Export reports to Excel
+- [ ] Mobile responsive improvements
 
-## Test Credentials
-- Admin: `admin@crm.com` / `admin123`
+### P3 (Nice to have)
+- [ ] Quick Quote widget
+- [ ] Manager performance dashboard
+- [ ] Automated follow-up reminders
 
-## Recent Updates (27.03.2026)
-1. ✅ Quote History System
-2. ✅ Scenario Pricing (minimum/recommended/aggressive)
-3. ✅ Audit trail for quote changes
-4. ✅ Quote History in CRM Leads
-5. ✅ Scenario selection in VIN Check page
+## Next Tasks
+1. Quote Analytics Dashboard - visual charts for quote conversion
+2. Pricing Profiles - switch between Standard/Premium/Promo
+3. Manager performance dashboard with override analytics
+
+---
+Last Updated: 2026-03-27
