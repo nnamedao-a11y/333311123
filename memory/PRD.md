@@ -15,8 +15,16 @@ CRM система для автобізнесу з:
 - **Auth**: JWT-based
 
 ### URL Structure
-- Public: `/` (home), `/vehicles` (catalog), `/vin-check` (VIN search)
-- Admin: `/admin/login`, `/admin/dashboard`, `/admin/leads`, etc.
+**Public:**
+- `/` - Home page (hero, stats, hot auctions)
+- `/vehicles` - Vehicle catalog with filters
+- `/vin-check` - VIN search & calculator
+
+**Admin CRM:**
+- `/admin/login` - Auth
+- `/admin` - Dashboard
+- `/admin/leads` - Lead management
+- `/admin/calculator` - **NEW** Calculator Admin Panel
 
 ## What's Implemented (27.03.2026)
 
@@ -46,71 +54,77 @@ CRM система для автобізнесу з:
 - [x] Auto-seed при старті модуля
 - [x] Hidden fee логіка (margin control)
 
-### 🔥 MONETIZATION FLOW (DONE - 27.03.2026)
-**Full Revenue Pipeline:**
+### 🔥 MONETIZATION FLOW (DONE)
 ```
 VIN Search → Calculator → Quote Snapshot → Lead → CRM
 ```
+- [x] Calculator UI на VIN Check page
+- [x] Quote creation з visible та internal totals
+- [x] Lead from Quote conversion
+- [x] **MARGIN CONTROL**: Менеджер бачить внутрішню ціну + hidden fee
+- [x] CRM Leads table з "Ціна клієнта" та "Внутрішня ціна"
 
-**Реалізовано:**
-- [x] Calculator UI на VIN Check page (порт, тип авто, breakdown)
-- [x] Quote creation з збереженням visible та internal totals
-- [x] Lead from Quote conversion з metadata (quoteId, internalTotal, hiddenFee)
-- [x] Quick Lead creation без quote
-- [x] **MARGIN CONTROL**: Менеджер бачить внутрішню ціну + приховану маржу
-- [x] CRM Leads table з колонками "Ціна клієнта" та "Внутрішня ціна"
-- [x] Кнопка "Хочу купити це авто" на VIN page
+### 🔥 CALCULATOR ADMIN UI (DONE - 27.03.2026)
+**Revenue Engine Control Panel**
 
-### Margin Control System
-```
-Client sees:    $22,699 (visible total)
-Manager sees:   $24,099 (internal total) [+$1,400 hidden fee]
-```
+**Features:**
+- [x] Stats Dashboard: total quotes, quoted value, profiles
+- [x] Profile Settings: all fees editable without code
+- [x] Hidden Fees (Margin Control): threshold, under/over values
+- [x] USA Inland Rates table with CRUD
+- [x] Ocean Rates table with CRUD
+- [x] EU Delivery Rates table with CRUD
+- [x] Auction Fee Rules table with brackets editing
+- [x] Live Preview: test calculations with current settings
+- [x] Dual view: Client (visible) vs Manager (internal) totals
 
-**Hidden Fee Logic:**
-- Under $5,000 car price: $700 margin
-- Over $5,000 car price: $1,400 margin
+**Admin can edit:**
+- Insurance Rate (%)
+- USA Handling Fee ($)
+- Bank Fee ($)
+- EU Port Handling ($)
+- Company Fee ($)
+- Customs Rate (%)
+- Documentation Fee ($)
+- Title Fee ($)
+- Hidden Fee Threshold ($)
+- Hidden Fee Under/Over Threshold ($)
+- All route rates by port and vehicle type
+- All auction fee brackets
 
 ### APIs (WORKING)
 **Public:**
-- `GET /api/public/vin/:vin` - пошук по VIN
-- `POST /api/calculator/calculate` - розрахунок вартості
-- `POST /api/calculator/quote` - створення quote
-- `GET /api/calculator/quote/:id` - отримання quote
-- `GET /api/calculator/ports` - доступні порти та типи авто
-- `POST /api/public/leads/quick` - швидке створення lead
-- `POST /api/public/leads/from-quote` - lead з quote
-- `GET /api/public/leads/status/:id` - статус lead
+- `GET /api/public/vin/:vin` - VIN search
+- `POST /api/calculator/calculate` - calculate cost
+- `POST /api/calculator/quote` - create quote
+- `POST /api/public/leads/quick` - quick lead
+- `POST /api/public/leads/from-quote` - lead from quote
 
-**Admin:**
-- `POST /api/auth/login` - авторизація
-- `GET /api/auth/me` - поточний користувач
-- `GET /api/leads` - список лідів
-- `PUT /api/leads/:id` - оновлення lead
-- `DELETE /api/leads/:id` - видалення lead
-- `GET /api/calculator/config/profile` - активний профіль
-- `PATCH /api/calculator/config/profile` - оновити налаштування
+**Calculator Admin:**
+- `GET /api/calculator/config/profile` - active profile
+- `PATCH /api/calculator/config/profile` - update profile
+- `GET /api/calculator/config/routes/:code` - route rates
+- `POST /api/calculator/config/routes` - upsert rate
+- `DELETE /api/calculator/config/routes/:id` - delete rate
+- `GET /api/calculator/config/auction-fees/:code` - auction rules
+- `POST /api/calculator/config/auction-fees` - upsert rule
+- `DELETE /api/calculator/config/auction-fees/:id` - delete rule
+- `GET /api/calculator/admin/stats` - statistics
 
 ## Calculator Pricing Structure
 
 ### Default Rates (Bulgaria Profile)
-**USA Inland Delivery:**
-- NJ: $475 (sedan) / $525 (bigSUV)
-- GA: $450 / $500
-- TX: $550 / $600
-- CA: $900 / $1,000
+**USA Inland:** NJ $475-$525, GA $450-$500, TX $550-$600, CA $900-$1000
 
-**Ocean Freight:**
-- NJ: $525 (sedan) / $700 (SUV) / $800 (bigSUV)
-- GA: $500 / $650 / $750
-- TX: $600 / $950 / $1,050
-- CA: $950 / $1,450 / $1,550
+**Ocean Freight:** 
+- NJ: $525 (sedan) - $800 (bigSUV)
+- CA: $950 (sedan) - $1550 (bigSUV)
 
-**EU Delivery:** $1,200 (sedan) / $1,400 (SUV) / $1,600 (bigSUV)
+**EU Delivery:** $1200-$1600 by vehicle type
 
 **Fixed Fees:**
-- Insurance: 2% of (car price + auction fee)
-- Customs: 10% of car price
+- Insurance: 2%
+- Customs: 10%
 - USA Handling: $150
 - Bank Fee: $100
 - EU Port Handling: $600
@@ -118,36 +132,37 @@ Manager sees:   $24,099 (internal total) [+$1,400 hidden fee]
 - Documentation: $50
 - Title Fee: $75
 
+**Hidden Fee (Margin):**
+- Under $5,000: $700
+- Over $5,000: $1,400
+
 ## Prioritized Backlog
 
-### P1 - High Priority (COMPLETED ✅)
-- [x] Calculator UI на VIN page та каталозі
-- [x] Lead Conversion Flow (VIN → quote → lead)
-- [x] Margin Control (internal vs visible pricing)
-- [ ] WebSocket для real-time оновлень таймерів
+### COMPLETED ✅
+- [x] VIN Intelligence Engine
+- [x] Calculator Engine
+- [x] Monetization Flow
+- [x] Calculator Admin UI
 
-### P2 - Medium Priority
-- [ ] Calculator Admin UI page (редагування ставок)
-- [ ] Quote history в CRM
-- [ ] Manager price editing tools
+### P2 - Next Steps
+- [ ] Quote History in CRM
+- [ ] Pricing Profiles (A/B testing)
+- [ ] Manager Price Override with Audit
+- [ ] WebSocket for real-time timers
 - [ ] Email notifications
 
-### P3 - Low Priority
+### P3 - Future
 - [ ] Quote versioning
-- [ ] Import presets (premium margin, promo mode)
-- [ ] A/B testing для маржі
+- [ ] Import presets (premium, promo)
+- [ ] SEO VIN pages
 
 ## Test Credentials
 - Admin: `admin@crm.com` / `admin123`
+- Role: `master_admin` (full access to Calculator Admin)
 
 ## Recent Updates (27.03.2026)
-1. ✅ Implemented full Monetization Flow
-2. ✅ Added margin control (visible vs internal pricing)
-3. ✅ Updated CRM Leads page with dual price columns
-4. ✅ Added VIN column to leads table
-5. ✅ Fixed Lead API validation issues
-
-## Next Steps
-1. Calculator Admin UI - manage rates without code
-2. WebSocket for real-time auction timers
-3. Quote history view in CRM
+1. ✅ Implemented Monetization Flow
+2. ✅ Added margin control system
+3. ✅ Updated CRM Leads with dual pricing
+4. ✅ Created Calculator Admin UI
+5. ✅ Added Live Preview with visible/internal totals
