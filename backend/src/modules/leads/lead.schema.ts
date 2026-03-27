@@ -98,6 +98,19 @@ export class Lead extends Document {
   @Prop()
   convertedAt?: Date;
 
+  // === VIN & CALCULATOR ===
+  @Prop({ index: true })
+  vin?: string;
+
+  @Prop({ type: Number })
+  price?: number;
+
+  @Prop()
+  notes?: string;
+
+  @Prop({ type: Object, default: {} })
+  metadata?: Record<string, any>;
+
   @Prop({ default: false })
   isDeleted: boolean;
 
