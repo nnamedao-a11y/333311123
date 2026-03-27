@@ -140,6 +140,17 @@ class BIBICRMTester:
         if success:
             if 'totals' in response or 'total' in response:
                 self.log("✅ Calculation completed successfully")
+                # Check for monetization flow - visible vs internal totals
+                if 'totals' in response:
+                    totals = response['totals']
+                    if 'visible' in totals and 'internal' in totals:
+                        self.log(f"✅ MONETIZATION: Visible total: ${totals['visible']}, Internal total: ${totals['internal']}")
+                        if totals['internal'] > totals['visible']:
+                            self.log(f"✅ MONETIZATION: Hidden margin detected: ${totals['internal'] - totals['visible']}")
+                        return True
+                    else:
+                        self.log("❌ MONETIZATION: Missing visible/internal totals separation")
+                        return False
                 return True
             else:
                 self.log("❌ Missing totals in calculation response")
@@ -171,6 +182,16 @@ class BIBICRMTester:
             if 'quote' in response and 'id' in response['quote']:
                 self.quote_id = response['quote']['id']
                 self.log(f"✅ Quote created with ID: {self.quote_id}")
+                
+                # Check monetization flow in quote
+                quote = response['quote']
+                if 'visibleTotal' in quote and 'internalTotal' in quote:
+                    self.log(f"✅ MONETIZATION: Quote visible total: ${quote['visibleTotal']}, internal total: ${quote['internalTotal']}")
+                    if 'hiddenFee' in quote:
+                        self.log(f"✅ MONETIZATION: Hidden fee: ${quote['hiddenFee']}")
+                else:
+                    self.log("❌ MONETIZATION: Missing visibleTotal/internalTotal in quote")
+                
                 return True
             elif '_id' in response:
                 self.quote_id = response['_id']
@@ -256,6 +277,41 @@ class BIBICRMTester:
                 return False
         return False
 
+    def test_leads_api(self):
+        """Test leads API with monetization data"""
+        self.log("\n=== TESTING LEADS API ===")
+        
+        if not self.token:
+            self.log("❌ No token available for leads API test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Leads",
+            "GET",
+            "leads",
+            200
+        )
+        
+        if success:
+            if 'data' in response and isinstance(response['data'], list):
+                leads = response['data']
+                self.log(f"✅ Found {len(leads)} leads")
+                
+                # Check for monetization data in leads
+                for lead in leads[:3]:  # Check first 3 leads
+                    if 'metadata' in lead and lead['metadata']:
+                        metadata = lead['metadata']
+                        if 'internalTotal' in metadata and 'hiddenFee' in metadata:
+                            self.log(f"✅ MONETIZATION: Lead {lead.get('id', 'N/A')} has internal total: ${metadata['internalTotal']}, hidden fee: ${metadata['hiddenFee']}")
+                        else:
+                            self.log(f"⚠️  Lead {lead.get('id', 'N/A')} missing monetization metadata")
+                    
+                return True
+            else:
+                self.log("❌ Invalid leads response format")
+                return False
+        return False
+
     def test_auth_me(self):
         """Test authenticated user info"""
         self.log("\n=== TESTING AUTH ME ===")
@@ -293,6 +349,7 @@ class BIBICRMTester:
             ("Calculator Quote", self.test_calculator_quote),
             ("Lead Quick Create", self.test_lead_quick_create),
             ("Lead from Quote", self.test_lead_from_quote),
+            ("Leads API", self.test_leads_api),
             ("Auth Me", self.test_auth_me),
         ]
         

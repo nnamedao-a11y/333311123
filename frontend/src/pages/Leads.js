@@ -179,29 +179,30 @@ const Leads = () => {
           <thead>
             <tr>
               <th>Ім'я</th>
+              <th>VIN</th>
               <th>Email</th>
-              <th>Компанія</th>
               <th>Джерело</th>
               <th>Статус</th>
-              <th>Вартість</th>
+              <th>Ціна клієнта</th>
+              <th>Внутрішня ціна</th>
               <th className="text-right">Дії</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="text-center py-12 text-[#71717A]">
+              <tr><td colSpan={8} className="text-center py-12 text-[#71717A]">
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-[#18181B] border-t-transparent rounded-full animate-spin"></div>
                   Завантаження...
                 </div>
               </td></tr>
             ) : leads.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-12 text-[#71717A]">Немає лідів</td></tr>
+              <tr><td colSpan={8} className="text-center py-12 text-[#71717A]">Немає лідів</td></tr>
             ) : leads.map(lead => (
               <tr key={lead.id} data-testid={`lead-row-${lead.id}`}>
                 <td className="font-medium text-[#18181B]">{lead.firstName} {lead.lastName}</td>
-                <td>{lead.email}</td>
-                <td>{lead.company || '—'}</td>
+                <td className="font-mono text-xs text-[#71717A]">{lead.vin || '—'}</td>
+                <td>{lead.email || '—'}</td>
                 <td><span className="text-xs text-[#71717A]">{sourceLabels[lead.source]}</span></td>
                 <td>
                   <Select value={lead.status} onValueChange={(v) => handleStatusChange(lead.id, v)}>
@@ -215,7 +216,13 @@ const Leads = () => {
                     </SelectContent>
                   </Select>
                 </td>
-                <td className="text-[#059669] font-medium">${lead.value?.toLocaleString() || 0}</td>
+                <td className="text-[#059669] font-medium">${lead.price?.toLocaleString() || 0}</td>
+                <td className="text-[#7C3AED] font-semibold">
+                  ${lead.metadata?.internalTotal?.toLocaleString() || lead.price?.toLocaleString() || 0}
+                  {lead.metadata?.hiddenFee > 0 && (
+                    <span className="text-xs text-[#71717A] ml-1">(+${lead.metadata?.hiddenFee})</span>
+                  )}
+                </td>
                 <td>
                   <div className="flex items-center justify-end gap-1">
                     <button 
