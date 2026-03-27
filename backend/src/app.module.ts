@@ -37,6 +37,7 @@ import { SourceDiscoveryModule } from './modules/source-discovery/source-discove
 import { CompetitorParsingModule } from './modules/competitor-parsing/competitor-parsing.module';
 import { AuctionRankingModule } from './modules/auction-ranking/auction-ranking.module';
 import { CalculatorModule } from './modules/calculator/calculator.module';
+import { QuoteAnalyticsModule } from './modules/analytics/quote-analytics.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { CalculatorModule } from './modules/calculator/calculator.module';
     CompetitorParsingModule,
     AuctionRankingModule,
     CalculatorModule,
+    QuoteAnalyticsModule,
   ],
 })
 export class AppModule {}

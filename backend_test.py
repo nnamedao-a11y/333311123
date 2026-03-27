@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 class BIBICRMTester:
-    def __init__(self, base_url="https://github-task.preview.emergentagent.com"):
+    def __init__(self, base_url="https://a11y-audit-4.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -937,6 +937,191 @@ class BIBICRMTester:
         
         return True
 
+    def test_quote_analytics_overview(self):
+        """Test Quote Analytics Overview endpoint"""
+        self.log("\n=== TESTING QUOTE ANALYTICS OVERVIEW ===")
+        
+        if not self.token:
+            self.log("❌ No token available for quote analytics test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Analytics Overview",
+            "GET",
+            "admin/quote-analytics/overview",
+            200
+        )
+        
+        if success:
+            required_fields = ['totalQuotes', 'conversionRate', 'estimatedMargin', 'totalVisibleRevenue']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                self.log(f"✅ Overview data: {response['totalQuotes']} quotes, {response['conversionRate']}% conversion")
+                self.log(f"   Revenue: ${response['totalVisibleRevenue']}, Margin: ${response['estimatedMargin']}")
+                return True
+            else:
+                self.log(f"❌ Missing fields in overview: {missing_fields}")
+                return False
+        return False
+
+    def test_quote_analytics_scenarios(self):
+        """Test Quote Analytics Scenarios endpoint"""
+        self.log("\n=== TESTING QUOTE ANALYTICS SCENARIOS ===")
+        
+        if not self.token:
+            self.log("❌ No token available for scenarios analytics test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Analytics Scenarios",
+            "GET",
+            "admin/quote-analytics/scenarios",
+            200
+        )
+        
+        if success:
+            if isinstance(response, list):
+                self.log(f"✅ Found {len(response)} scenario performance records")
+                for scenario in response[:3]:  # Check first 3
+                    if 'scenario' in scenario and 'count' in scenario and 'conversionRate' in scenario:
+                        self.log(f"   {scenario['scenario']}: {scenario['count']} quotes, {scenario['conversionRate']}% conversion")
+                    else:
+                        self.log("❌ Invalid scenario data structure")
+                        return False
+                return True
+            else:
+                self.log("❌ Scenarios response is not a list")
+                return False
+        return False
+
+    def test_quote_analytics_managers(self):
+        """Test Quote Analytics Managers endpoint"""
+        self.log("\n=== TESTING QUOTE ANALYTICS MANAGERS ===")
+        
+        if not self.token:
+            self.log("❌ No token available for managers analytics test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Analytics Managers",
+            "GET",
+            "admin/quote-analytics/managers",
+            200
+        )
+        
+        if success:
+            if isinstance(response, list):
+                self.log(f"✅ Found {len(response)} manager performance records")
+                for manager in response[:3]:  # Check first 3
+                    if 'managerId' in manager and 'totalQuotes' in manager:
+                        name = manager.get('managerName', manager['managerId'])
+                        self.log(f"   {name}: {manager['totalQuotes']} quotes, {manager.get('conversionRate', 0)}% conversion")
+                        if 'overridesCount' in manager:
+                            self.log(f"     Overrides: {manager['overridesCount']}, Lost: ${manager.get('revenueLostByOverride', 0)}")
+                    else:
+                        self.log("❌ Invalid manager data structure")
+                        return False
+                return True
+            else:
+                self.log("❌ Managers response is not a list")
+                return False
+        return False
+
+    def test_quote_analytics_sources(self):
+        """Test Quote Analytics Sources endpoint"""
+        self.log("\n=== TESTING QUOTE ANALYTICS SOURCES ===")
+        
+        if not self.token:
+            self.log("❌ No token available for sources analytics test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Analytics Sources",
+            "GET",
+            "admin/quote-analytics/sources",
+            200
+        )
+        
+        if success:
+            if isinstance(response, list):
+                self.log(f"✅ Found {len(response)} source performance records")
+                for source in response[:3]:  # Check first 3
+                    if 'source' in source and 'totalQuotes' in source:
+                        self.log(f"   {source['source']}: {source['totalQuotes']} quotes, {source.get('conversionRate', 0)}% conversion")
+                        self.log(f"     Revenue: ${source.get('totalVisibleRevenue', 0)}, Margin: ${source.get('estimatedMargin', 0)}")
+                    else:
+                        self.log("❌ Invalid source data structure")
+                        return False
+                return True
+            else:
+                self.log("❌ Sources response is not a list")
+                return False
+        return False
+
+    def test_quote_analytics_timeline(self):
+        """Test Quote Analytics Timeline endpoint"""
+        self.log("\n=== TESTING QUOTE ANALYTICS TIMELINE ===")
+        
+        if not self.token:
+            self.log("❌ No token available for timeline analytics test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Analytics Timeline",
+            "GET",
+            "admin/quote-analytics/timeline",
+            200
+        )
+        
+        if success:
+            if isinstance(response, list):
+                self.log(f"✅ Found {len(response)} timeline data points")
+                for point in response[:3]:  # Check first 3
+                    if 'date' in point and 'totalQuotes' in point:
+                        self.log(f"   {point['date']}: {point['totalQuotes']} quotes, margin: ${point.get('totalMargin', 0)}")
+                    else:
+                        self.log("❌ Invalid timeline data structure")
+                        return False
+                return True
+            else:
+                self.log("❌ Timeline response is not a list")
+                return False
+        return False
+
+    def test_quote_analytics_full_dashboard(self):
+        """Test Quote Analytics Full Dashboard endpoint"""
+        self.log("\n=== TESTING QUOTE ANALYTICS FULL DASHBOARD ===")
+        
+        if not self.token:
+            self.log("❌ No token available for full dashboard test")
+            return False
+        
+        success, response = self.run_test(
+            "Get Quote Analytics Full Dashboard",
+            "GET",
+            "admin/quote-analytics",
+            200
+        )
+        
+        if success:
+            required_sections = ['overview', 'scenarios', 'managers', 'sources', 'timeline', 'lostRevenue']
+            missing_sections = [section for section in required_sections if section not in response]
+            
+            if not missing_sections:
+                self.log("✅ Full dashboard contains all required sections")
+                self.log(f"   Overview: {response['overview'].get('totalQuotes', 0)} quotes")
+                self.log(f"   Scenarios: {len(response['scenarios'])} records")
+                self.log(f"   Managers: {len(response['managers'])} records")
+                self.log(f"   Sources: {len(response['sources'])} records")
+                self.log(f"   Timeline: {len(response['timeline'])} data points")
+                self.log(f"   Lost Revenue: ${response['lostRevenue'].get('totalLostRevenue', 0)}")
+                return True
+            else:
+                self.log(f"❌ Missing sections in dashboard: {missing_sections}")
+                return False
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("🚀 Starting BIBI Cars CRM Backend API Tests")
@@ -945,6 +1130,12 @@ class BIBICRMTester:
         # Test sequence
         tests = [
             ("Admin Login", self.test_admin_login),
+            ("Quote Analytics Full Dashboard", self.test_quote_analytics_full_dashboard),
+            ("Quote Analytics Overview", self.test_quote_analytics_overview),
+            ("Quote Analytics Scenarios", self.test_quote_analytics_scenarios),
+            ("Quote Analytics Managers", self.test_quote_analytics_managers),
+            ("Quote Analytics Sources", self.test_quote_analytics_sources),
+            ("Quote Analytics Timeline", self.test_quote_analytics_timeline),
             ("Calculator Ports", self.test_calculator_ports),
             ("Calculator Calculate", self.test_calculator_calculate),
             ("Calculator Quote", self.test_calculator_quote),

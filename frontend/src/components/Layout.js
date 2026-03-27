@@ -18,7 +18,8 @@ import {
   SignOut,
   Bell,
   CaretDown,
-  CaretUp
+  CaretUp,
+  ChartLine
 } from '@phosphor-icons/react';
 
 const Layout = () => {
@@ -89,6 +90,7 @@ const Layout = () => {
         { path: '/admin/vehicles', icon: CarProfile, label: 'База авто' },
         { path: '/admin/vin', icon: MagnifyingGlass, label: 'VIN Пошук' },
         { path: '/admin/calculator', icon: Calculator, label: 'Калькулятор' },
+        { path: '/admin/analytics/quotes', icon: ChartLine, label: 'Quote Analytics' },
       ],
       roles: ['master_admin', 'moderator']
     },

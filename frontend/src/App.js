@@ -37,6 +37,7 @@ import ParserSettings from './pages/ParserSettings';
 import Vehicles from './pages/Vehicles';
 import VinSearch from './pages/VinSearch';
 import CalculatorAdmin from './pages/CalculatorAdmin';
+import QuoteAnalytics from './pages/QuoteAnalytics';
 import Layout from './components/Layout';
 
 import './App.css';
@@ -175,6 +176,7 @@ function App() {
             <Route path="vehicles" element={<Vehicles />} />
             <Route path="vin" element={<VinSearch />} />
             <Route path="calculator" element={<CalculatorAdmin />} />
+            <Route path="analytics/quotes" element={<QuoteAnalytics />} />
           </Route>
 
           {/* Legacy redirect: /login -> /admin/login */}

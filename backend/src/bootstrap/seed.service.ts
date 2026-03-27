@@ -28,6 +28,7 @@ import {
 
 interface SeedResult {
   users: number;
+  leads?: number;
   staff: number;
   automationRules: number;
   routingRules: number;
