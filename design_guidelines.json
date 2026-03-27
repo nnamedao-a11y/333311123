@@ -1,0 +1,92 @@
+{
+  "theme": "dark",
+  "archetype": "5 (Jewel & Luxury) - Modified for Premium SaaS Dashboard",
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Plus Jakarta Sans",
+    "scale": {
+      "h1": "text-4xl tracking-tight font-medium",
+      "h2": "text-2xl tracking-tight font-medium",
+      "h3": "text-xl tracking-tight font-medium",
+      "h4": "text-lg font-medium",
+      "body": "text-sm leading-relaxed",
+      "small": "text-xs tracking-wide uppercase text-zinc-400"
+    }
+  },
+  "colors": {
+    "background": "#0A0B0F",
+    "surface": "#13151A",
+    "surface_elevated": "#1C1F26",
+    "primary": "#4F46E5",
+    "primary_hover": "#6366F1",
+    "text_primary": "#F8FAFC",
+    "text_secondary": "#94A3B8",
+    "border": "rgba(255, 255, 255, 0.05)",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "danger": "#EF4444"
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-6 md:p-8",
+    "gap": "gap-6",
+    "radius": {
+      "card": "rounded-2xl",
+      "button": "rounded-xl",
+      "input": "rounded-xl",
+      "dropdown": "rounded-xl",
+      "pill": "rounded-full"
+    },
+    "shadows": {
+      "card": "shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]",
+      "dropdown": "shadow-[0_16px_48px_-12px_rgba(0,0,0,0.6)]",
+      "button_glow": "shadow-[0_0_16px_rgba(79,70,229,0.3)]",
+      "inner_soft": "inset 0 1px 0 0 rgba(255,255,255,0.05)"
+    }
+  },
+  "components": {
+    "card": "bg-[#13151A] rounded-2xl border border-white/5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] p-6 transition-all duration-300 hover:bg-[#15171E] hover:border-white/10 relative overflow-hidden",
+    "button_primary": "bg-[#4F46E5] text-white rounded-xl px-5 py-2.5 font-medium transition-all duration-300 hover:bg-[#6366F1] hover:shadow-[0_0_16px_rgba(79,70,229,0.3)] active:scale-[0.98] flex items-center justify-center gap-2",
+    "button_secondary": "bg-white/5 text-white rounded-xl px-5 py-2.5 font-medium border border-white/5 transition-all duration-300 hover:bg-white/10 hover:border-white/10 active:scale-[0.98] flex items-center justify-center gap-2",
+    "input": "bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/50 focus:border-[#4F46E5]/50 transition-all",
+    "dropdown_menu": "bg-[#1C1F26] border border-white/10 rounded-xl shadow-[0_16px_48px_-12px_rgba(0,0,0,0.6)] p-1 overflow-hidden backdrop-blur-xl",
+    "dropdown_item": "rounded-lg px-3 py-2 text-sm text-zinc-300 cursor-pointer transition-colors hover:bg-white/5 hover:text-white flex items-center gap-2 outline-none focus:bg-white/5 focus:text-white",
+    "table_container": "bg-[#13151A] rounded-2xl border border-white/5 overflow-hidden shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]",
+    "table_header": "bg-black/20 border-b border-white/5 text-zinc-400 font-medium text-xs uppercase tracking-wider py-4 px-6 text-left",
+    "table_row": "border-b border-white/5 transition-colors hover:bg-white/[0.02] last:border-0",
+    "table_cell": "py-4 px-6 text-sm text-zinc-300",
+    "sidebar": "w-64 bg-[#0A0B0F] border-r border-white/5 h-screen flex flex-col p-4",
+    "kpi_card": "relative overflow-hidden bg-[#13151A] rounded-2xl border border-white/5 p-6 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]",
+    "kpi_value": "text-4xl font-medium tracking-tight text-white mt-2",
+    "kpi_label": "text-sm text-zinc-400 font-medium",
+    "badge": "px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/10",
+    "tabs_list": "inline-flex h-10 items-center justify-center rounded-xl bg-black/20 p-1 text-zinc-400",
+    "tabs_trigger": "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-sm"
+  },
+  "motion": {
+    "hover": "transition-all duration-300 ease-out",
+    "dropdown": "animate-in fade-in zoom-in-95 duration-200",
+    "page_load": "animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out"
+  },
+  "media": {
+    "images": [
+      {
+        "category": "auth_bg",
+        "url": "https://static.prod-images.emergentagent.com/jobs/589ced29-26da-40a2-a6f9-392ae44275d3/images/45b286a541ef7dfcccd78256b95ba192893706f580e8c7edbff4d77dd565cc48.png",
+        "description": "Abstract luxury dark background with smooth gradient for welcome or auth screens"
+      }
+    ]
+  },
+  "icons_library": "@phosphor-icons/react",
+  "instructions_to_main_agent": [
+    "Install `@phosphor-icons/react`, `recharts`, `framer-motion`, `date-fns`, `clsx`, `tailwind-merge`.",
+    "Since the project uses `.js` / `.jsx` files, do NOT create or import `.tsx` files. Ensure all created components and pages use `.jsx` syntax.",
+    "Do NOT use raw HTML for interactive elements like Select, Dialog, or Dropdown. Import the Shadcn UI components provided in `src/components/ui/` and customize their classes via className or by editing the component files directly to apply the exact styles defined in this guideline (rounded-xl/2xl, soft borders border-white/5).",
+    "Update `tailwind.config.js` to extend the fontFamily with `Outfit` (sans) and `Plus Jakarta Sans` (sans), and inject Google Fonts into `index.css`.",
+    "For the 'Period selector (Day/Week/Month)', use Shadcn Tabs or ToggleGroup, styled with `rounded-xl` container and `rounded-lg` active pills with `bg-white/10`.",
+    "KPI Cards must look 'rich'. Add a subtle colored radial gradient in the background of the card using absolute positioning and `blur-3xl`, for example `bg-emerald-500/10` for positive metrics, to simulate a soft glow without hard borders.",
+    "For 'Workload Heatmap', use Recharts. Remove grid lines (`vertical={false} horizontal={false}`), use monotone curve lines, dark tooltips (matching dropdown menu style), and no harsh axis lines.",
+    "Tables should have NO vertical dividers. Horizontal dividers must be `border-white/5`. Wrap the table in the `table_container` class to provide rounded corners and soft shadow.",
+    "Forms must use `rounded-xl` inputs with dark transparent backgrounds (`bg-black/20`) and no sharp borders.",
+    "Add `data-testid` attributes to all interactive elements (buttons, inputs, dropdown items, table rows) for testing."
+  ]
+}
